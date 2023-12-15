@@ -3,6 +3,7 @@ require('@nomiclabs/hardhat-truffle5');
 require('solidity-coverage')
 require("hardhat-gas-reporter");
 require("@nomiclabs/hardhat-web3");
+require("@nomicfoundation/hardhat-chai-matchers");
 
 // task action function receives the Hardhat Runtime Environment as second argument
 task("accounts", "Prints accounts", async (_, { web3 }) => {
