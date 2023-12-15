@@ -1,0 +1,8 @@
+/.idea/
+/build/
+/node_modules/
+/*.iml
+/artifacts/
+/cache/
+/coverage/
+coverage.json
