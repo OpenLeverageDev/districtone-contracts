@@ -13,12 +13,12 @@ task("accounts", "Prints accounts", async (_, { web3 }) => {
 
 module.exports = {
     solidity: {
-        version: "0.8.20",
+        version: "0.8.21",
         settings: {
             optimizer: {
                 enabled: true
-            },
-        },
+            }
+        }
     },
     gasReporter: {
         enabled: true
