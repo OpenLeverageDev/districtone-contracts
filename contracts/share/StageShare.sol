@@ -121,11 +121,16 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
     }
 
     /**
-     * @notice Withdraws accumulated rewards for the caller in a specific stage.
-     * @param stageId The ID of the stage for which to withdraw rewards.
+     * @notice Withdraws accumulated rewards for the caller across multiple stages.
+     * @dev Iterates over an array of stage IDs and accumulates the rewards for each stage. Transfers the total accumulated rewards to the caller.
+     * @param stageIds An array of stage IDs for which the rewards are to be withdrawn.
      */
-    function withdrawReward(uint256 stageId) external override {
-        uint256 reward = _withdrawReward(stageId);
+    function withdrawRewards(uint256[] memory stageIds) external override {
+        uint256 reward;
+        uint len = stageIds.length;
+        for (uint i = 0; i < len; i++) {
+            reward = _withdrawReward(stageIds[i]);
+        }
         OLE.transferOut(_msgSender(), reward);
     }
 
@@ -141,8 +146,11 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
         OLE.transferOut(_msgSender(), outAmount + reward);
     }
 
-    function getReward(uint256 stageId, address holder) external view returns (uint256) {
-        return _getHolderReward(stageId, holder);
+    function getRewards(uint256[] memory stageIds, address holder) external override view returns (uint256 reward) {
+        uint len = stageIds.length;
+        for (uint i = 0; i < len; i++) {
+            reward += _getHolderReward(stageIds[i], holder);
+        }
     }
 
     function setProtocolFeeDestination(address _protocolFeeDestination) external override onlyOwner {
@@ -194,7 +202,7 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
             totalSupply = supply - shares;
         }
         sharesSupply[stageId] = totalSupply;
-        // If the totalSupply is zero, convert the reward to protocol fee
+        // If the totalSupply is zero, convert the holder fee to protocol fee
         if (totalSupply == 0) {
             protocolFee += holderFee;
             holderFee = 0;

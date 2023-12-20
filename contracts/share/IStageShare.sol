@@ -15,7 +15,7 @@ interface IStageShare {
 
     function sellShares(uint256 stageId, uint256 shares, uint256 minOutAmount) external;
 
-    function withdrawReward(uint256 stageId) external;
+    function withdrawRewards(uint256[] memory stageIds) external;
 
     function exitStage(uint256 stageId, uint256 minOutAmount) external;
 
@@ -33,5 +33,5 @@ interface IStageShare {
 
     function getSellPriceWithFees(uint256 stageId, uint256 amount) external view returns (uint256);
 
-    function getReward(uint256 stageId, address holder) external view returns (uint256);
+    function getRewards(uint256[] memory stageIds, address holder) external view returns (uint256 reward);
 }
