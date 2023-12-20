@@ -1,32 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract LinkUp {
-    address public rootAddress;
+contract LinkUp is Ownable {
+
+    address public signerAddress;
     uint256 public constant JOIN_FEE = 0.0015 ether;
     mapping(address => address) public inviterOf;
     mapping(address => uint256) public balance;
 
     event Joined(address indexed user, address indexed inviter);
     event Withdrawn(address indexed user, uint256 amount);
+    event SignerChanged(address indexed newSigner);
 
-    constructor() {
-        rootAddress = msg.sender;
-    }
-
-    // This is the EIP-2098 compact representation, which reduces gas costs
-    struct SignatureCompact {
-        bytes32 r;
-        bytes32 yParityAndS;
+    constructor(address signer) Ownable(msg.sender) {
+        signerAddress = signer;
     }
 
     function join(address inviter, bytes memory signature) external payable {
         require(msg.value >= JOIN_FEE, "Incorrect fee");
         require(inviterOf[msg.sender] == address(0), "Already joined");
         require(inviter != address(0) && inviter != msg.sender, "Invalid inviter");
-        require(verifySig(rootAddress, inviter, signature), "Invalid signature");
+        require(verifySig(signerAddress, inviter, signature), "Invalid signature");
 
         inviterOf[msg.sender] = inviter;
 
@@ -39,10 +35,10 @@ contract LinkUp {
         if (inviterOf[inviter] != address(0)) {
             balance[inviterOf[inviter]] += secondTierInviterFee;
         } else {
-            balance[rootAddress] += secondTierInviterFee;
+            balance[owner()] += secondTierInviterFee;
         }
 
-        balance[rootAddress] += devFundFee;
+        balance[owner()] += devFundFee;
 
         emit Joined(msg.sender, inviter);
     }
@@ -57,7 +53,7 @@ contract LinkUp {
         emit Withdrawn(msg.sender, amount);
     }
 
-    function verifySig(address signingAddr, address signedAddr, bytes memory signature) public pure returns (bool) {
+    function verifySig(address signingAddr, address signedAddr, bytes memory signature) internal pure returns (bool) {
         bytes32 messageHash = keccak256(abi.encodePacked(signedAddr));
         bytes32 ethSignedHash = keccak256(
             abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
@@ -78,6 +74,12 @@ contract LinkUp {
             s := mload(add(sig, 64))
             v := byte(0, mload(add(sig, 96)))
         }
+    }
+
+    function changeSigner(address newSigner) external onlyOwner {
+        require(newSigner != address(0), "Invalid new signer address");
+        signerAddress = newSigner;
+        emit SignerChanged(newSigner);
     }
 
 }
