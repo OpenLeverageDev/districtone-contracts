@@ -11,5 +11,4 @@ interface IErrors {
     error NoRewards();
     error ZeroAmount();
     error InvalidParam();
-
 }
