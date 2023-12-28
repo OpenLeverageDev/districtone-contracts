@@ -38,14 +38,13 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
 
     // Signature-related variables for buy share operation.
     address public signIssuerAddress; // Address authorized to issue buy permissions.
-    bytes32 private constant BUY_PERMISSION = 0x6275790000000000000000000000000000000000000000000000000000000000; // Permission signature for 'buy' operation.
     uint256 public signValidDuration; // Time duration in seconds for which a signature remains valid.
 
     // Mappings for managing shares and rewards.
-    mapping(uint256 => uint256) public sharesSupply; // Mapping of stageId to shares supply.
-    mapping(uint256 => mapping(address => uint256)) public sharesBalance; // Mapping of stageId and holder address to share balance.
-    mapping(uint256 => uint256) public rewardPerShareStored; // Mapping of stageId to per share reward stored (scaled by 10**18).
-    mapping(uint256 => mapping(address => HolderReward)) public holderSharesReward; // Mapping of stageId and holder address to holder rewards.
+    mapping(uint256 stageId => uint256 supply) public sharesSupply; // Mapping of stageId to shares supply.
+    mapping(uint256 stageId => mapping(address holder => uint256 balance)) public sharesBalance; // Mapping of stageId and holder address to share balance.
+    mapping(uint256 stageId => uint256 reward) public rewardPerShareStored; // Mapping of stageId to per share reward stored (scaled by 10**18).
+    mapping(uint256 stageId => mapping(address holder => HolderReward)) public holderSharesReward; // Mapping of stageId and holder address to holder rewards.
 
     uint256 public stageIdx; // Index to track the current stage.
 
@@ -70,6 +69,7 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
      */
     function createStage() external override {
         uint256 stageId = ++ stageIdx;
+        _buyShares(stageId, 1, 0);
         emit StageCreated(stageId, _msgSender());
     }
 
@@ -89,19 +89,9 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
         uint256 timestamp,
         bytes memory signature
     ) external override {
-        if (shares == 0) revert ZeroAmount();
-        if (stageId > stageIdx) revert StageNotExists();
-        address trader = _msgSender();
-        SignatureLib.SignedData memory signedData = SignatureLib.SignedData(trader, BUY_PERMISSION, timestamp);
+        SignatureLib.SignedData memory signedData = SignatureLib.SignedData(_msgSender(), timestamp);
         if(!signedData.verify(signature, signIssuerAddress, signValidDuration)) revert InvalidSignature();
-        uint256 supply = sharesSupply[stageId];
-        uint256 price = _getPrice(supply, shares, K, B);
-        if (price > maxInAmount) revert InsufficientInAmount();
-        if (price != OLE.safeTransferIn(trader, price)) revert InsufficientInAmount();
-        sharesBalance[stageId][trader] += shares;
-        uint256 totalSupply = supply + shares;
-        sharesSupply[stageId] = totalSupply;
-        emit Trade(stageId, trader, true, shares, price, 0, 0, totalSupply);
+        _buyShares(stageId, shares, maxInAmount);
     }
 
     /**
@@ -186,11 +176,26 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
         return price - protocolFee - holderFee;
     }
 
+    function _buyShares(uint256 stageId, uint256 shares, uint256 maxInAmount) internal {
+        if (shares == 0) revert ZeroAmount();
+        if (stageId > stageIdx) revert StageNotExists();
+        address trader = _msgSender();
+        uint256 supply = sharesSupply[stageId];
+        uint256 price = _getPrice(supply, shares, K, B);
+        if (price > maxInAmount) revert InsufficientInAmount();
+        if (price > 0 && price != OLE.safeTransferIn(trader, price)) revert InsufficientInAmount();
+        sharesBalance[stageId][trader] += shares;
+        uint256 totalSupply = supply + shares;
+        sharesSupply[stageId] = totalSupply;
+        emit Trade(stageId, trader, true, shares, price, 0, 0, totalSupply);
+    }
+
     function _sellShares(uint256 stageId, uint256 shares, uint256 minOutAmount) internal returns (uint256 outAmount) {
         if (shares == 0) revert ZeroAmount();
         if (stageId > stageIdx) revert StageNotExists();
         uint256 supply = sharesSupply[stageId];
         address trader = _msgSender();
+        if (shares >= supply) revert CannotSellLastShare();
         if (shares > sharesBalance[stageId][trader]) revert InsufficientShares();
         uint256 price = _getPrice(supply - shares, shares, K, B);
         (uint256 protocolFee, uint256 holderFee) = _getFees(price);
@@ -202,11 +207,6 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
             totalSupply = supply - shares;
         }
         sharesSupply[stageId] = totalSupply;
-        // If the totalSupply is zero, convert the holder fee to protocol fee
-        if (totalSupply == 0) {
-            protocolFee += holderFee;
-            holderFee = 0;
-        }
         _updateSharesReward(stageId, holderFee, trader);
         emit Trade(stageId, trader, false, shares, price, protocolFee, holderFee, totalSupply);
         _collectFees(protocolFee);
@@ -222,8 +222,8 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
     }
 
     function _getPrice(uint256 supply, uint256 amount, uint256 k, uint256 b) internal pure returns (uint256){
-        uint256 sum1 =  supply  * ((k + b) + supply  * k + b) / 2;
-        uint256 sum2 = (supply + amount) * ((k + b) + (supply + amount) * k + b) / 2;
+        uint256 sum1 = supply == 0 ? 0 : (supply - 1) * ((k + b) + (supply - 1) * k + b) / 2;
+        uint256 sum2 = supply == 0 && amount == 1 ? 0 : (supply - 1 + amount) * ((k + b) + (supply - 1 + amount) * k + b) / 2;
         return sum2 - sum1;
     }
 

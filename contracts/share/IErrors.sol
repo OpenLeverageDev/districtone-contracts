@@ -5,6 +5,7 @@ interface IErrors {
     error InvalidSignature();
     error ZeroAddress();
     error StageNotExists();
+    error CannotSellLastShare();
     error InsufficientShares();
     error InsufficientInAmount();
     error InsufficientOutAmount();
