@@ -12,6 +12,16 @@ library Erc20Utils {
         return token.balanceOf(address(this));
     }
 
+    function safeApprove(IERC20 token, address spender, uint256 value) internal {
+        token.forceApprove(spender, value);
+    }
+
+    function safeTransferFrom(IERC20 token, address from, address to, uint256 amount) internal returns (uint256) {
+        uint256 balance = balanceOfThis(token);
+        token.safeTransferFrom(from, to, amount);
+        return balanceOfThis(token) - balance;
+    }
+
     function safeTransferIn(IERC20 token, address from, uint256 amount) internal returns (uint256) {
         uint256 balance = balanceOfThis(token);
         token.safeTransferFrom(from, address(this), amount);

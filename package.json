@@ -41,6 +41,8 @@
     "prettier": "^3.1.1",
     "prettier-plugin-solidity": "^1.2.0",
     "solidity-coverage": "^0.8.5",
-    "truffle-plugin-stdjsonin": "github:mhrsalehi/truffle-plugin-stdjsonin"
+    "truffle-plugin-stdjsonin": "github:mhrsalehi/truffle-plugin-stdjsonin",
+    "keccak256": "^1.0.3",
+    "merkletreejs": "0.3.10"
   }
 }
