@@ -21,8 +21,7 @@
     "chai": "^4.3.7",
     "ethers": "^6.9.0",
     "hardhat-gas-reporter": "^1.0.9",
-    "solhint": "^3.6.2",
-    "web3-utils": "^4.0.5"
+    "solhint": "^3.6.2"
   },
   "bundleDependencies": [],
   "devDependencies": {
