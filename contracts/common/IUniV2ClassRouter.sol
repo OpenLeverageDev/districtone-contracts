@@ -2,7 +2,6 @@
 pragma solidity 0.8.21;
 
 interface IUniV2ClassRouter {
-
     function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) external pure returns (uint256 amountOut);
 
     function swapExactTokensForTokens(
@@ -22,10 +21,5 @@ interface IUniV2ClassRouter {
         uint256 amountBMin,
         address to,
         uint256 deadline
-    ) external returns (
-        uint256 amountA,
-        uint256 amountB,
-        uint256 liquidity
-    );
+    ) external returns (uint256 amountA, uint256 amountB, uint256 liquidity);
 }
-

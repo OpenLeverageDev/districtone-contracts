@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {IERC20} from  "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {Erc20Utils} from "./common/Erc20Utils.sol";
 import {IUniV2ClassPair} from "./common/IUniV2ClassPair.sol";
@@ -45,13 +45,13 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
     }
 
     uint256 internal constant PERCENT_DIVISOR = 10000;
-    uint256 private constant WEEK = 7 * 86400;  // XOLE lock times are rounded by week
-    uint256 private constant MIN_DURATION = 7 * 86400;  // 7 days
-    uint256 private constant MAX_DURATION = 4 * 365 * 86400;  // 4 years
+    uint256 private constant WEEK = 7 * 86400; // XOLE lock times are rounded by week
+    uint256 private constant MIN_DURATION = 7 * 86400; // 7 days
+    uint256 private constant MAX_DURATION = 4 * 365 * 86400; // 4 years
 
     IERC20 public immutable oleToken;
     IUniV2ClassPair public immutable pair;
-    address public immutable token1;  // token1 of lp
+    address public immutable token1; // token1 of lp
     address public immutable xole;
     uint256 public epochIdx;
     uint256 public minXOLELockDuration; // min XOLE lock duration in seconds when converting
@@ -62,7 +62,14 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
     // mapping of epochId to epoch info
     mapping(uint256 => Epoch) public epochs;
 
-    constructor(address _oleToken, address _pair, address _token1, address _xole, address _distributor, uint256 _minXOLELockDuration) Ownable(_msgSender()) verifyDuration(_minXOLELockDuration){
+    constructor(
+        address _oleToken,
+        address _pair,
+        address _token1,
+        address _xole,
+        address _distributor,
+        uint256 _minXOLELockDuration
+    ) Ownable(_msgSender()) verifyDuration(_minXOLELockDuration) {
         oleToken = IERC20(_oleToken);
         pair = IUniV2ClassPair(_pair);
         token1 = _token1;
@@ -75,7 +82,16 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
     event Withdrawn(uint256 epochId, address account, uint256 amount, uint256 penalty);
     event ConvertedToXOLE(uint256 epochId, address account, uint256 amount);
 
-    event EpochAdded(uint256 epochId, bytes32 merkleRoot, uint256 total, uint256 startTime, uint256 expireTime, uint256 vestDuration, uint16 penaltyBase, uint16 penaltyAdd);
+    event EpochAdded(
+        uint256 epochId,
+        bytes32 merkleRoot,
+        uint256 total,
+        uint256 startTime,
+        uint256 expireTime,
+        uint256 vestDuration,
+        uint16 penaltyBase,
+        uint16 penaltyAdd
+    );
     event Recycled(uint256 epochId, uint256 recycledAmount);
     event PenaltyWithdrawn(uint256 amount);
 
@@ -151,11 +167,11 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
     }
 
     /*** View Functions ***/
-    function verifyVest(address account, uint256 _epochId, uint256 _balance, bytes32[] calldata _merkleProof) external view returns (bool valid){
+    function verifyVest(address account, uint256 _epochId, uint256 _balance, bytes32[] calldata _merkleProof) external view returns (bool valid) {
         return _verifyVest(account, epochs[_epochId].merkleRoot, _balance, _merkleProof);
     }
 
-    function getWithdrawable(address account, uint256[] calldata _epochIds) external view returns (uint256[] memory results){
+    function getWithdrawable(address account, uint256[] calldata _epochIds) external view returns (uint256[] memory results) {
         uint256 len = _epochIds.length;
         results = new uint256[](len);
         for (uint256 i = 0; i < len; i++) {
@@ -170,7 +186,7 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
         }
     }
 
-    function getEarlyExitWithdrawable(address account, uint256 _epochId) external view returns (uint256 amount, uint256 penalty){
+    function getEarlyExitWithdrawable(address account, uint256 _epochId) external view returns (uint256 amount, uint256 penalty) {
         Reward memory reward = rewards[_epochId][account];
         if (reward.amount == reward.withdrawn) {
             (amount, penalty) = (0, 0);
@@ -187,8 +203,8 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
         uint256 expireTime,
         uint256 vestDuration,
         uint16 penaltyBase,
-        uint16 penaltyAdd)
-    external onlyDistributor verifyDuration(vestDuration) {
+        uint16 penaltyAdd
+    ) external onlyDistributor verifyDuration(vestDuration) {
         if (expireTime <= startTime || expireTime <= block.timestamp) revert InvalidTime();
         if (total == 0 || penaltyBase + penaltyAdd >= PERCENT_DIVISOR) revert InvalidAmount();
         uint256 received = oleToken.safeTransferIn(msg.sender, total);
@@ -246,7 +262,7 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
         return MerkleProof.verify(_merkleProof, root, leaf);
     }
 
-    function _withdrawReward(uint256 epochId) internal returns (uint256){
+    function _withdrawReward(uint256 epochId) internal returns (uint256) {
         Reward storage reward = rewards[epochId][msg.sender];
         if (reward.amount == 0 || reward.amount == reward.withdrawn) revert InvalidAmount();
         Epoch memory epoch = epochs[epochId];
@@ -262,7 +278,7 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
         if (block.timestamp > endTime) {
             return reward.amount;
         } else {
-            return (block.timestamp - reward.vestStartTime) * reward.amount / epoch.vestDuration;
+            return ((block.timestamp - reward.vestStartTime) * reward.amount) / epoch.vestDuration;
         }
     }
 
@@ -272,9 +288,9 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
         withdrawable = releaseable - reward.withdrawn;
         // cal penalty
         uint256 endTime = reward.vestStartTime + epoch.vestDuration;
-        uint256 penaltyFactor = (endTime - block.timestamp) * epoch.penaltyAdd / epoch.vestDuration + epoch.penaltyBase;
+        uint256 penaltyFactor = ((endTime - block.timestamp) * epoch.penaltyAdd) / epoch.vestDuration + epoch.penaltyBase;
         uint256 locked = reward.amount - releaseable;
-        penalty = locked * penaltyFactor / PERCENT_DIVISOR;
+        penalty = (locked * penaltyFactor) / PERCENT_DIVISOR;
         if (penalty >= locked) revert InvalidPenalty();
         withdrawable += locked - penalty;
         return (withdrawable, penalty);
@@ -290,7 +306,7 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
     }
 
     function _convertToNewXole(address account, uint256 oleAmount, uint256 token1MaxAmount, uint256 unlockTime) internal {
-        unlockTime = unlockTime / WEEK * WEEK;
+        unlockTime = (unlockTime / WEEK) * WEEK;
         verifyUnlockTime(unlockTime);
         uint256 liquidity = formLp(oleAmount, token1MaxAmount);
         pair.safeApprove(xole, liquidity);
@@ -298,16 +314,16 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
     }
 
     function _convertAndIncreaseXoleAmount(address account, uint256 oleAmount, uint256 token1MaxAmount) internal {
-        (,uint256 lockTime) = IxOLE(xole).locked(account);
+        (, uint256 lockTime) = IxOLE(xole).locked(account);
         verifyUnlockTime(lockTime);
         uint256 liquidity = formLp(oleAmount, token1MaxAmount);
         pair.safeApprove(xole, liquidity);
         IxOLE(xole).increase_amount_for(account, liquidity);
     }
 
-    function formLp(uint256 oleAmount, uint256 token1MaxAmount) internal returns (uint256 liquidity){
+    function formLp(uint256 oleAmount, uint256 token1MaxAmount) internal returns (uint256 liquidity) {
         (uint256 reserveA, uint256 reserveB) = getReserves(address(oleToken), token1);
-        uint256 amountBOptimal = oleAmount * reserveB / reserveA;
+        uint256 amountBOptimal = (oleAmount * reserveB) / reserveA;
         if (amountBOptimal > token1MaxAmount) revert ExceedMax(amountBOptimal);
         IERC20(token1).safeTransferFrom(msg.sender, address(pair), amountBOptimal);
         oleToken.transferOut(address(pair), oleAmount);
@@ -315,8 +331,8 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
     }
 
     function getReserves(address tokenA, address tokenB) internal view returns (uint256 reserveA, uint256 reserveB) {
-        (uint256 reserve0, uint256 reserve1,) = pair.getReserves();
-        (address _token0,) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        (uint256 reserve0, uint256 reserve1, ) = pair.getReserves();
+        (address _token0, ) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         (reserveA, reserveB) = tokenA == _token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 
@@ -333,6 +349,4 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
         if (_msgSender() < distributor) revert InvalidSender();
         _;
     }
-
-
 }

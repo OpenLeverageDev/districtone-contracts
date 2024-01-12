@@ -8,7 +8,7 @@ library Erc20Utils {
     error ETHTransferFailed();
     using SafeERC20 for IERC20;
 
-    function balanceOfThis(IERC20 token) internal view returns (uint256){
+    function balanceOfThis(IERC20 token) internal view returns (uint256) {
         return token.balanceOf(address(this));
     }
 
@@ -35,11 +35,10 @@ library Erc20Utils {
     function uniTransferOut(IERC20 token, address to, uint256 amount, address weth) internal {
         if (address(token) == weth) {
             IWETH(weth).withdraw(amount);
-            (bool success,) = to.call{value: amount}("");
+            (bool success, ) = to.call{value: amount}("");
             if (!success) revert ETHTransferFailed();
         } else {
             transferOut(token, to, amount);
         }
     }
-
 }

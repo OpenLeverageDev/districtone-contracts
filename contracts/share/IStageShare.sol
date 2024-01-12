@@ -2,7 +2,6 @@
 pragma solidity 0.8.21;
 
 interface IStageShare {
-
     event StageCreated(uint256 stageId, address creator);
 
     event Trade(uint256 stageId, address trader, bool isBuy, uint256 shares, uint256 price, uint256 protocolFee, uint256 holderFee, uint256 supply);
@@ -11,7 +10,9 @@ interface IStageShare {
 
     function createStage() external;
 
-    function buyShares(uint256 stageId, uint256 shares, uint256 maxInAmount,  uint256 timestamp, bytes memory signature) external;
+    function buyShares(uint256 stageId, uint256 shares, uint256 maxInAmount, uint256 timestamp, bytes memory signature) external;
+
+    function buySharesTo(uint256 stageId, uint256 shares, uint256 maxInAmount, uint256 timestamp, bytes memory signature, address to) external;
 
     function sellShares(uint256 stageId, uint256 shares, uint256 minOutAmount) external;
 

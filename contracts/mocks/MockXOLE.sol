@@ -8,8 +8,8 @@ import {Erc20Utils} from "../common/Erc20Utils.sol";
 contract MockXOLE is IxOLE {
     using Erc20Utils for IERC20;
 
-    uint256 constant WEEK = 7 * 86400;  // all future times are rounded by week
-    uint256 constant MAXTIME = 4 * 365 * 86400;  // 4 years
+    uint256 constant WEEK = 7 * 86400; // all future times are rounded by week
+    uint256 constant MAXTIME = 4 * 365 * 86400; // 4 years
 
     int128 constant DEPOSIT_FOR_TYPE = 0;
     int128 constant CREATE_LOCK_TYPE = 1;
@@ -23,21 +23,9 @@ contract MockXOLE is IxOLE {
     uint256 public totalLocked;
     uint256 public totalSupply;
 
-    event Deposit (
-        address indexed provider,
-        uint256 value,
-        uint256 unlocktime,
-        int128 type_,
-        uint256 prevBalance,
-        uint256 balance
-    );
+    event Deposit(address indexed provider, uint256 value, uint256 unlocktime, int128 type_, uint256 prevBalance, uint256 balance);
 
-    event Withdraw (
-        address indexed provider,
-        uint256 value,
-        uint256 prevBalance,
-        uint256 balance
-    );
+    event Withdraw(address indexed provider, uint256 value, uint256 prevBalance, uint256 balance);
 
     struct LockedBalance {
         uint256 amount;
@@ -65,7 +53,7 @@ contract MockXOLE is IxOLE {
     function increase_unlock_time(uint256 _unlock_time) external override {
         LockedBalance memory _locked = locked[msg.sender];
         // Locktime is rounded down to weeks
-        uint256 unlock_time = _unlock_time / WEEK * WEEK;
+        uint256 unlock_time = (_unlock_time / WEEK) * WEEK;
         require(_locked.amount > 0, "Nothing is locked");
         require(unlock_time > _locked.end, "Can only increase lock duration");
         require(unlock_time >= block.timestamp + (2 * WEEK), "Can only lock until time in the future");
@@ -86,7 +74,7 @@ contract MockXOLE is IxOLE {
 
     function create_lock_check(address to, uint256 _value, uint256 _unlock_time) internal view returns (uint unlock_time) {
         // Locktime is rounded down to weeks
-        unlock_time = _unlock_time / WEEK * WEEK;
+        unlock_time = (_unlock_time / WEEK) * WEEK;
         LockedBalance memory _locked = locked[to];
         require(_value > 0, "Non zero value");
         require(_locked.amount == 0, "Withdraw old tokens first");
@@ -132,5 +120,4 @@ contract MockXOLE is IxOLE {
     function mint(address addr, uint amount) external {
         _balances[addr] = amount;
     }
-
 }

@@ -5,21 +5,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../common/IxOLE.sol";
 
 contract LinkUp is Ownable {
-
     IxOLE public immutable xOLEToken; // xOLE Token, immutable
-    uint256 public constant MIN_XOLE_BALANCE = 100 * 10**18; // Example: 100 xOLE (adjust as needed)
+    uint256 public constant MIN_XOLE_BALANCE = 100 * 10 ** 18; // Example: 100 xOLE (adjust as needed)
     address public signerAddress;
     uint256 public joinFee = 0.0015 ether;
     mapping(address => address) public inviterOf;
     mapping(address => uint256) public balance;
 
-    event Joined(
-        address indexed user,
-        address indexed inviter,
-        uint256 directInviterFee,
-        uint256 secondTierInviterFee,
-        uint256 protocolFee
-    );
+    event Joined(address indexed user, address indexed inviter, uint256 directInviterFee, uint256 secondTierInviterFee, uint256 protocolFee);
     event Withdrawn(address indexed user, uint256 amount);
     event FeeChanged(uint256 newFee);
     event SignerChanged(address indexed newSigner);
@@ -114,9 +107,7 @@ contract LinkUp is Ownable {
 
     function verifySig(address signingAddr, address signedAddr, bytes memory signature) internal pure returns (bool) {
         bytes32 messageHash = keccak256(abi.encodePacked(signedAddr));
-        bytes32 ethSignedHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
-        );
+        bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
         return recoverSigner(ethSignedHash, signature) == signingAddr;
     }
 
@@ -145,5 +136,4 @@ contract LinkUp is Ownable {
         signerAddress = newSigner;
         emit SignerChanged(newSigner);
     }
-
 }
