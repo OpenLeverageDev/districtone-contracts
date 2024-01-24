@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {IOPZapV1, IERC20} from "../IOPZapV1.sol";
+import {IOPZapV1} from "../IOPZapV1.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IWETH} from "../common/IWETH.sol";
 
 contract MockZap is IOPZapV1 {

@@ -2,7 +2,8 @@
 pragma solidity 0.8.21;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {IOPZapV1, IERC20} from "./IOPZapV1.sol";
+import {IOPZapV1} from "./IOPZapV1.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IStageShare} from "./share/IStageShare.sol";
 import {IUniV2ClassPair} from "./common/IUniV2ClassPair.sol";
 import {Erc20Utils} from "./common/Erc20Utils.sol";
@@ -60,7 +61,7 @@ contract OPZap is IOPZapV1 {
         OLE.safeApprove(address(STAGE), boughtOle);
         STAGE.buySharesTo(stageId, shares, boughtOle, timestamp, signature, msg.sender);
         // refund ole
-        uint oleBalance = OLE.balanceOfThis();
+        uint256 oleBalance = OLE.balanceOfThis();
         if (oleBalance > 0) {
             OLE.transferOut(msg.sender, oleBalance);
         }
@@ -117,7 +118,7 @@ contract OPZap is IOPZapV1 {
         _amountB = (_amountA * _reserveB) / _reserveA;
     }
 
-    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) private view returns (uint amountOut) {
+    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) private view returns (uint256 amountOut) {
         uint256 amountInWithFee = amountIn * (10000 - DEX_FEES);
         uint256 numerator = amountInWithFee * reserveOut;
         uint256 denominator = reserveIn * 10000 + amountInWithFee;
