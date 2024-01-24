@@ -15,7 +15,7 @@ contract MockWETH is IWETH, ERC20("WETH", "WETH") {
 
     function withdraw(uint256 amount) external override {
         _burn(msg.sender, amount);
-        (bool success, ) = msg.sender.call{ value: amount }("");
+        (bool success, ) = msg.sender.call{value: amount}("");
         require(success);
     }
 }

@@ -14,14 +14,20 @@ describe("LinkUp Contract", function() {
   let addr2;
   let addrs;
   let signer;
+  let oleCtr;
+  let wethCtr;
 
   beforeEach(async function() {
+    oleCtr = await (await ethers.getContractFactory("MockToken")).deploy("OLE", "OLE", ethers.parseEther("1000000000"));
+    wethCtr = await (await ethers.getContractFactory("MockWETH")).deploy();
+    let zapCtr = await (await ethers.getContractFactory("MockZap")).deploy(oleCtr, wethCtr);
+    await oleCtr.mint(await zapCtr.getAddress(), ethers.parseEther("10000"));
     LinkUp = await ethers.getContractFactory("LinkUp");
     MockXOLE = await ethers.getContractFactory("MockXOLE");
     mockxOLE = await MockXOLE.deploy(ZERO_ADDRESS);
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
     signer = addrs[9];
-    linkUp = await LinkUp.connect(owner).deploy(signer, mockxOLE);
+    linkUp = await LinkUp.connect(owner).deploy(signer, mockxOLE, oleCtr, zapCtr);
   });
 
   async function setupXOLEBalances(directInviterHasXOLE, secondTierInviterHasXOLE) {
@@ -59,7 +65,7 @@ describe("LinkUp Contract", function() {
         .withArgs(
           invitee,
           inviter,
-          ethers.parseEther("0.00105"), // directInviterFee (example value)
+          ethers.parseEther("100"), // directInviterFee (example value)
           ethers.parseEther("0"),  // secondTierInviterFee (example value)
           ethers.parseEther("0.00045")  // protocolFee (example value)
         );
@@ -117,8 +123,8 @@ describe("LinkUp Contract", function() {
       const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, { value: ethers.parseEther("0.0015") });
 
       // Define the expected fee distribution based on your contract logic
-      const expectedDirectInviterFee = ethers.parseEther("0.0012"); // Replace with actual expected value
-      const expectedSecondTierInviterFee = ethers.parseEther("0.000225"); // Replace with actual expected value
+      const expectedDirectInviterFee = ethers.parseEther("84.210526315789473684"); // Replace with actual expected value
+      const expectedSecondTierInviterFee = ethers.parseEther("15.789473684210526316"); // Replace with actual expected value
       const expectedProtocolFee = ethers.parseEther("0.000075"); // Replace with actual expected value
 
       // Validate the Joined event with the expected fee distribution
@@ -153,8 +159,8 @@ describe("LinkUp Contract", function() {
 
 
       // Define the expected fee distribution based on your contract logic for this scenario
-      const expectedDirectInviterFee = ethers.parseEther("0.000975"); // Adjust the value based on your contract
-      const expectedSecondTierInviterFee = ethers.parseEther("0.00045"); // Adjust the value based on your contract
+      const expectedDirectInviterFee = ethers.parseEther("68.421052631578947368"); // Adjust the value based on your contract
+      const expectedSecondTierInviterFee = ethers.parseEther("31.578947368421052632"); // Adjust the value based on your contract
       const expectedProtocolFee = ethers.parseEther("0.000075"); // Adjust the value based on your contract
 
       // Validate the Joined event with the expected fee distribution
@@ -187,8 +193,8 @@ describe("LinkUp Contract", function() {
 
 
       // Define the expected fee distribution based on your contract logic for this scenario
-      const expectedDirectInviterFee = ethers.parseEther("0.001125"); // Adjust the value based on your contract
-      const expectedSecondTierInviterFee = ethers.parseEther("0.000375"); // Adjust the value based on your contract
+      const expectedDirectInviterFee = ethers.parseEther("75"); // Adjust the value based on your contract
+      const expectedSecondTierInviterFee = ethers.parseEther("25"); // Adjust the value based on your contract
       const expectedProtocolFee = ethers.parseEther("0"); // Adjust the value based on your contract
 
       // Validate the Joined event with the expected fee distribution
@@ -221,8 +227,8 @@ describe("LinkUp Contract", function() {
       const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, { value: ethers.parseEther("0.0015") });
 
       // Define the expected fee distribution based on your contract logic for this scenario
-      const expectedDirectInviterFee = ethers.parseEther("0.00105"); // Adjust the value based on your contract
-      const expectedSecondTierInviterFee = ethers.parseEther("0.0003"); // Adjust the value based on your contract
+      const expectedDirectInviterFee = ethers.parseEther("77.777777777777777777"); // Adjust the value based on your contract
+      const expectedSecondTierInviterFee = ethers.parseEther("22.222222222222222223"); // Adjust the value based on your contract
       const expectedProtocolFee = ethers.parseEther("0.00015"); // Adjust the value based on your contract
 
       // Validate the Joined event with the expected fee distribution
@@ -248,28 +254,40 @@ describe("LinkUp Contract", function() {
       await linkUp.connect(addrs[3]).join(addr1.address, signature1, { value: ethers.parseEther("0.0015") });
 
       // Withdraw balance
-      const initialBalance = await ethers.provider.getBalance(addr1.address);
-      const withdrawTx = await linkUp.connect(addr1).withdraw();
-      const receipt = await withdrawTx.wait();
+      const initialBalance = await oleCtr.balanceOf(addr1.address);
+      await linkUp.connect(addr1).withdraw();
 
-      // Using BigInt for arithmetic operation
-      let gasPrice;
-      if (receipt.effectiveGasPrice) {
-        gasPrice = BigInt(receipt.effectiveGasPrice.toString());
-      } else {
-        const tx = await ethers.provider.getTransaction(withdrawTx.hash);
-        gasPrice = tx.gasPrice ? BigInt(tx.gasPrice.toString()) : BigInt(tx.maxFeePerGas.toString());
-      }
+      const finalBalance = await oleCtr.balanceOf(addr1.address);
 
-      const gasUsed = BigInt(receipt.cumulativeGasUsed) * gasPrice;
-      const finalBalance = await ethers.provider.getBalance(addr1.address);
-
-      expect(BigInt(finalBalance.toString()) + gasUsed).to.be.above(BigInt(initialBalance.toString()));
+      expect(BigInt(finalBalance.toString())).to.be.above(BigInt(initialBalance.toString()));
     });
-
     it("Should fail if there is no balance to withdraw", async function() {
       await expect(linkUp.connect(addr1).withdraw())
         .to.be.revertedWithCustomError(linkUp, "NoBalanceToWithdraw");
+
+    });
+  });
+
+  describe("Withdrawing protocol fee", function() {
+    it("Withdraw and reset protocol fee", async function() {
+      // Setup: addr1 joins under addr2, then addr3 joins under addr1
+      const signature1 = await signer.signMessage(hexStringToArray(ethers.keccak256(addr1.address)));
+      const signature2 = await signer.signMessage(hexStringToArray(ethers.keccak256(addr2.address)));
+      await linkUp.connect(addr1).join(addr2.address, signature2, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addrs[3]).join(addr1.address, signature1, { value: ethers.parseEther("0.0015") });
+
+      // Withdraw balance
+      const initialBalance = await ethers.provider.getBalance(addr1.address);
+      let protocolFee = await linkUp.protocolFee();
+      await linkUp.connect(owner).withdrawProtocolFee(addr1.address);
+      const finalBalance = await ethers.provider.getBalance(addr1.address);
+      expect(BigInt(finalBalance.toString())).to.equal(BigInt(initialBalance.toString()) + BigInt(protocolFee));
+      expect(BigInt(await linkUp.protocolFee())).to.equal(0);
+
+    });
+    it("Should fail if sender is not owner", async function() {
+      await expect(linkUp.connect(addr1).withdrawProtocolFee(addr2))
+        .to.be.revertedWithCustomError(linkUp, "OwnableUnauthorizedAccount");
 
     });
   });

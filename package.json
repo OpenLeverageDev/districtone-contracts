@@ -37,12 +37,12 @@
     "buidler-gas-reporter": "^0.1.4",
     "ganache-time-traveler": "1.0.16",
     "hardhat": "2.19.2",
+    "keccak256": "^1.0.3",
+    "merkletreejs": "0.3.10",
     "mocha-logger": "1.0.8",
     "prettier": "^3.1.1",
     "prettier-plugin-solidity": "^1.2.0",
     "solidity-coverage": "^0.8.5",
-    "truffle-plugin-stdjsonin": "github:mhrsalehi/truffle-plugin-stdjsonin",
-    "keccak256": "^1.0.3",
-    "merkletreejs": "0.3.10"
+    "truffle-plugin-stdjsonin": "github:mhrsalehi/truffle-plugin-stdjsonin"
   }
 }

@@ -179,10 +179,12 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
         uint256 price = _getPrice(supply, shares, K, B);
         if (price > maxInAmount) revert InsufficientInAmount();
         if (price > 0 && price != OLE.safeTransferIn(_msgSender(), price)) revert InsufficientInAmount();
+        (uint256 protocolFee, uint256 holderFee) = _getFees(price);
+        _updateSharesReward(stageId, holderFee, to);
         sharesBalance[stageId][to] += shares;
         uint256 totalSupply = supply + shares;
         sharesSupply[stageId] = totalSupply;
-        emit Trade(stageId, to, true, shares, price, 0, 0, totalSupply);
+        emit Trade(stageId, to, true, shares, price, protocolFee, holderFee, totalSupply);
     }
 
     function _sellShares(uint256 stageId, uint256 shares, uint256 minOutAmount) internal returns (uint256 outAmount) {

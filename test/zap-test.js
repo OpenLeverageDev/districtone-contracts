@@ -19,12 +19,12 @@ describe("Zap Contract", function() {
   beforeEach(async function() {
     oleCtr = await (await ethers.getContractFactory("MockToken")).deploy("OLE", "OLE", ethers.parseEther("1000000000"));
     wethCtr = await (await ethers.getContractFactory("MockWETH")).deploy();
-    oleEthCtr = await (await ethers.getContractFactory("MockPancakePair")).deploy(await oleCtr.getAddress(), await wethCtr.getAddress(),
+    oleEthCtr = await (await ethers.getContractFactory("MockPancakePair")).deploy(oleCtr, wethCtr,
       ethers.parseEther("100000"), ethers.parseEther("1"));
-    xoleCtr = await (await ethers.getContractFactory("MockXOLE")).deploy(await oleEthCtr.getAddress());
-    stageShareCtr = await (await ethers.getContractFactory("MockStageShare")).deploy(await oleCtr.getAddress(), K, B);
-    zapCtr = await (await ethers.getContractFactory("OPZap")).deploy(await oleCtr.getAddress(), await wethCtr.getAddress(),
-      await oleEthCtr.getAddress(), DEX_FEES, await xoleCtr.getAddress(), await stageShareCtr.getAddress());
+    xoleCtr = await (await ethers.getContractFactory("MockXOLE")).deploy(oleEthCtr);
+    stageShareCtr = await (await ethers.getContractFactory("MockStageShare")).deploy(oleCtr, K, B);
+    zapCtr = await (await ethers.getContractFactory("OPZap")).deploy(oleCtr, wethCtr,
+      oleEthCtr, DEX_FEES, await xoleCtr, await stageShareCtr);
     [deployer, acc1, ...addrs] = await ethers.getSigners();
     ts = (await ethers.provider.getBlock("latest")).timestamp;
   });

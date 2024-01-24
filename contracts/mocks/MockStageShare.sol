@@ -5,7 +5,6 @@ import {IErrors} from "../share/IErrors.sol";
 import {Erc20Utils, IERC20} from "../common/Erc20Utils.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 contract MockStageShare is IErrors {
     using Erc20Utils for IERC20;
     // Immutable curve parameters for share pricing.
@@ -23,10 +22,9 @@ contract MockStageShare is IErrors {
     mapping(uint256 stageId => uint256 supply) public sharesSupply; // Mapping of stageId to shares supply.
     mapping(uint256 stageId => mapping(address holder => uint256 balance)) public sharesBalance; // Mapping of stageId and holder address to share balance.
 
-
     uint256 public stageIdx; // Index to track the current stage.
 
-    constructor(IERC20 _ole, uint256 _k, uint256 _b){
+    constructor(IERC20 _ole, uint256 _k, uint256 _b) {
         OLE = _ole;
         K = _k;
         B = _b;
@@ -83,5 +81,4 @@ contract MockStageShare is IErrors {
             OLE.transferOut(protocolFeeDestination, protocolFee);
         }
     }
-
 }

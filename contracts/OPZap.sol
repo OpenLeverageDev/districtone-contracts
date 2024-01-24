@@ -20,15 +20,8 @@ contract OPZap is IOPZapV1 {
     IUniV2ClassPair public immutable OLE_ETH; // Address of the token pair for liquidity : OLE/ETH
     address public immutable XOLE; // Address of the OpenLeverage XOLE token
     IStageShare public immutable STAGE; // Address of the OpenLeverage Stage share contract
-    uint256 public immutable DEX_FEES; // 0.3% dex fees
-    constructor(
-        IERC20 _ole,
-        IWETH _weth,
-        IUniV2ClassPair _pair,
-        uint256 _dexFee,
-        address _xole,
-        IStageShare _stageShare
-    ) {
+    uint256 public immutable DEX_FEES; // 0.3% dex fees (e.g., 20 means 0.2%)
+    constructor(IERC20 _ole, IWETH _weth, IUniV2ClassPair _pair, uint256 _dexFee, address _xole, IStageShare _stageShare) {
         OLE = _ole;
         WETH = _weth;
         OLE_ETH = _pair;
@@ -37,9 +30,11 @@ contract OPZap is IOPZapV1 {
         STAGE = _stageShare;
     }
 
-    function swapETHForOLE() external payable override {
+    function swapETHForOLE() external payable override returns (uint256) {
         WETH.deposit{value: msg.value}();
+        uint256 oleBalance = OLE.balanceOfThis();
         _swapETHForOLE(msg.value, msg.sender);
+        return OLE.balanceOfThis() - oleBalance;
     }
 
     function createXoleByETH(uint256 minLpReturn, uint256 unlockTime) external payable override {
@@ -64,7 +59,7 @@ contract OPZap is IOPZapV1 {
         uint256 boughtOle = OLE.balanceOfThis();
         OLE.safeApprove(address(STAGE), boughtOle);
         STAGE.buySharesTo(stageId, shares, boughtOle, timestamp, signature, msg.sender);
-        // returns the remaining ole to the msg.sender
+        // refund ole
         uint oleBalance = OLE.balanceOfThis();
         if (oleBalance > 0) {
             OLE.transferOut(msg.sender, oleBalance);
@@ -73,7 +68,7 @@ contract OPZap is IOPZapV1 {
 
     function _swapETHForOLE(uint256 ethAmount, address to) internal {
         OLE_ETH.sync();
-        (uint256 reserve0, uint256 reserve1,) = OLE_ETH.getReserves();
+        (uint256 reserve0, uint256 reserve1, ) = OLE_ETH.getReserves();
         IERC20(address(WETH)).transferOut(address(OLE_ETH), ethAmount);
         if (oleIsToken0()) {
             OLE_ETH.swap(getAmountOut(ethAmount, reserve1, reserve0), 0, to, "");
@@ -83,7 +78,7 @@ contract OPZap is IOPZapV1 {
     }
 
     function _addLpByETH(uint256 ethAmount) internal returns (uint256 lpReturn) {
-        (uint256 reserve0, uint256 reserve1,) = OLE_ETH.getReserves();
+        (uint256 reserve0, uint256 reserve1, ) = OLE_ETH.getReserves();
         uint256 ethToSell;
         if (oleIsToken0()) {
             ethToSell = _getAccurateETHToSell(ethAmount, reserve1, reserve0);
@@ -95,7 +90,7 @@ contract OPZap is IOPZapV1 {
     }
 
     function _addLp(uint256 ethAmount, uint256 oleAmount) internal returns (uint256 lpReturn) {
-        (uint256 reserve0, uint256 reserve1,) = OLE_ETH.getReserves();
+        (uint256 reserve0, uint256 reserve1, ) = OLE_ETH.getReserves();
         uint256 oleReserve = oleIsToken0() ? reserve0 : reserve1;
         uint256 ethReserve = oleIsToken0() ? reserve1 : reserve0;
         uint256 ethOut = ethAmount;
@@ -111,7 +106,6 @@ contract OPZap is IOPZapV1 {
         lpReturn = OLE_ETH.mint(address(this));
     }
 
-
     function _getAccurateETHToSell(uint256 amountAIn, uint256 reserveA, uint256 reserveB) internal view returns (uint256) {
         uint256 halfTokenAIn = amountAIn / 2;
         uint256 nominator = getAmountOut(halfTokenAIn, reserveA, reserveB);
@@ -123,16 +117,14 @@ contract OPZap is IOPZapV1 {
         _amountB = (_amountA * _reserveB) / _reserveA;
     }
 
-    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) private view returns (uint amountOut)
-    {
+    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) private view returns (uint amountOut) {
         uint256 amountInWithFee = amountIn * (10000 - DEX_FEES);
         uint256 numerator = amountInWithFee * reserveOut;
         uint256 denominator = reserveIn * 10000 + amountInWithFee;
         amountOut = numerator / denominator;
     }
 
-    function oleIsToken0() private view returns (bool){
+    function oleIsToken0() private view returns (bool) {
         return address(OLE) < address(WETH);
     }
-
 }
