@@ -37,6 +37,7 @@ describe("Zap Contract", function() {
       expect(await zapCtr.DEX_FEES()).to.equal(DEX_FEES);
       expect(await zapCtr.XOLE()).to.equal(await xoleCtr.getAddress());
       expect(await zapCtr.STAGE()).to.equal(await stageShareCtr.getAddress());
+      expect(await zapCtr.owner()).to.equal(deployer);
     });
   });
 

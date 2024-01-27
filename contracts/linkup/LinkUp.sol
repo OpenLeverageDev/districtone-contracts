@@ -5,8 +5,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../common/IxOLE.sol";
 import "../IOPZapV1.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Erc20Utils} from "../common/Erc20Utils.sol";
 
 contract LinkUp is Ownable {
+    using Erc20Utils for IERC20;
+
     IxOLE public immutable xOLEToken; // xOLE Token, immutable
     IERC20 public immutable OLE; // Address of the OLE token
     IOPZapV1 public immutable ZAP;
@@ -102,7 +105,7 @@ contract LinkUp is Ownable {
         uint256 amount = balance[msg.sender];
         if (amount == 0) revert NoBalanceToWithdraw();
         balance[msg.sender] = 0;
-        OLE.transfer(msg.sender, amount);
+        OLE.transferOut(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
     }
 
