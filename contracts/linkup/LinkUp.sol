@@ -2,7 +2,7 @@
 pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../common/IxOLE.sol";
+import "../common/ISOLE.sol";
 import "../IOPZapV1.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Erc20Utils} from "../common/Erc20Utils.sol";
@@ -10,10 +10,10 @@ import {Erc20Utils} from "../common/Erc20Utils.sol";
 contract LinkUp is Ownable {
     using Erc20Utils for IERC20;
 
-    IxOLE public immutable xOLEToken; // xOLE Token, immutable
+    ISOLE public immutable sOLEToken; // sOLE Token, immutable
     IERC20 public immutable OLE; // Address of the OLE token
     IOPZapV1 public immutable ZAP;
-    uint256 public constant MIN_XOLE_BALANCE = 100 * 10 ** 18; // Example: 100 xOLE (adjust as needed)
+    uint256 public constant MIN_SOLE_BALANCE = 100 * 10 ** 18; // Example: 100 sOLE (adjust as needed)
     address public signerAddress;
     uint256 public joinFee = 0.0015 ether;
     mapping(address => address) public inviterOf;
@@ -35,9 +35,9 @@ contract LinkUp is Ownable {
     error InvalidNewSignerAddress();
     error InvalidSignatureLength();
 
-    constructor(address signer, address _xOLETokenAddress, IERC20 _ole, IOPZapV1 _zap) Ownable(msg.sender) {
+    constructor(address signer, address _sOLETokenAddress, IERC20 _ole, IOPZapV1 _zap) Ownable(msg.sender) {
         signerAddress = signer;
-        xOLEToken = IxOLE(_xOLETokenAddress); // Set the xOLE Token address here
+        sOLEToken = ISOLE(_sOLETokenAddress); // Set the sOLE Token address here
         OLE = _ole;
         ZAP = _zap;
     }
@@ -55,24 +55,24 @@ contract LinkUp is Ownable {
         uint256 secondTierInviterFeePercent = 0;
         uint256 protocolFeePercent = 100;
 
-        // Check xOLE balances of inviters
-        bool directInviterOwnsXOLE = xOLEToken.balanceOf(inviter) >= MIN_XOLE_BALANCE;
-        bool secondTierInviterOwnsXOLE = false;
+        // Check sOLE balances of inviters
+        bool directInviterOwnsSOLE = sOLEToken.balanceOf(inviter) >= MIN_SOLE_BALANCE;
+        bool secondTierInviterOwnsSOLE = false;
         address secondTierInviter = inviterOf[inviter];
         if (secondTierInviter != address(0)) {
-            secondTierInviterOwnsXOLE = xOLEToken.balanceOf(secondTierInviter) >= MIN_XOLE_BALANCE;
+            secondTierInviterOwnsSOLE = sOLEToken.balanceOf(secondTierInviter) >= MIN_SOLE_BALANCE;
         }
 
         // Calculate fee distribution percent
-        if (directInviterOwnsXOLE && secondTierInviterOwnsXOLE) {
+        if (directInviterOwnsSOLE && secondTierInviterOwnsSOLE) {
             directInviterFeePercent = 75;
             secondTierInviterFeePercent = 25;
             protocolFeePercent = 0;
-        } else if (directInviterOwnsXOLE) {
+        } else if (directInviterOwnsSOLE) {
             directInviterFeePercent = 80;
             secondTierInviterFeePercent = 15;
             protocolFeePercent = 5;
-        } else if (secondTierInviterOwnsXOLE) {
+        } else if (secondTierInviterOwnsSOLE) {
             directInviterFeePercent = 65;
             secondTierInviterFeePercent = 30;
             protocolFeePercent = 5;

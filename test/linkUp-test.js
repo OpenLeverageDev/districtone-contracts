@@ -8,7 +8,7 @@ describe("LinkUp Contract", function() {
   let LinkUp;
   let linkUp;
   let MockXOLE;
-  let mockxOLE;
+  let mocksOLE;
   let owner;
   let addr1;
   let addr2;
@@ -23,20 +23,20 @@ describe("LinkUp Contract", function() {
     let zapCtr = await (await ethers.getContractFactory("MockZap")).deploy(oleCtr, wethCtr);
     await oleCtr.mint(await zapCtr.getAddress(), ethers.parseEther("10000"));
     LinkUp = await ethers.getContractFactory("LinkUp");
-    MockXOLE = await ethers.getContractFactory("MockXOLE");
-    mockxOLE = await MockXOLE.deploy(ZERO_ADDRESS);
+    MockXOLE = await ethers.getContractFactory("MockSOLE");
+    mocksOLE = await MockXOLE.deploy(ZERO_ADDRESS);
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
     signer = addrs[9];
-    linkUp = await LinkUp.connect(owner).deploy(signer, mockxOLE, oleCtr, zapCtr);
+    linkUp = await LinkUp.connect(owner).deploy(signer, mocksOLE, oleCtr, zapCtr);
   });
 
   async function setupXOLEBalances(directInviterHasXOLE, secondTierInviterHasXOLE) {
     if (directInviterHasXOLE) {
-      await mockxOLE.mint(addr1.address, ethers.parseEther("100")); // Direct inviter has xOLE
+      await mocksOLE.mint(addr1.address, ethers.parseEther("100")); // Direct inviter has sOLE
     } // else do not mint to simulate no balance
 
     if (secondTierInviterHasXOLE) {
-      await mockxOLE.mint(addr2.address, ethers.parseEther("100")); // Second-tier inviter has xOLE
+      await mocksOLE.mint(addr2.address, ethers.parseEther("100")); // Second-tier inviter has sOLE
     } // else do not mint to simulate no balance
   }
 
@@ -101,16 +101,16 @@ describe("LinkUp Contract", function() {
         .to.be.revertedWithCustomError(linkUp, "AlreadyJoined");
     });
 
-    it("Should distribute fees correctly when only the direct inviter owns xOLE", async function() {
-      // addr1 is the direct inviter and owns enough xOLE tokens
-      // addr2 is the second-tier inviter and does not own enough xOLE tokens
+    it("Should distribute fees correctly when only the direct inviter owns sOLE", async function() {
+      // addr1 is the direct inviter and owns enough sOLE tokens
+      // addr2 is the second-tier inviter and does not own enough sOLE tokens
 
       // Sign inviter address
       const inviter = addr1.address; // Direct inviter
       const secondTierInviter = addr2.address; // Second-tier inviter
       const invitee = addrs[3].address; // New user being invited
 
-      // Ensure addr2 has no xOLE to affect the distribution
+      // Ensure addr2 has no sOLE to affect the distribution
       await setupXOLEBalances(true, false);
 
       // Generate signatures
@@ -139,9 +139,9 @@ describe("LinkUp Contract", function() {
         );
     });
 
-    it("Should distribute fees correctly when only the second-tier inviter owns xOLE", async function() {
-      // Setup: addr2 is the direct inviter and does not own enough xOLE tokens
-      // addr1 is the second-tier inviter and owns enough xOLE tokens
+    it("Should distribute fees correctly when only the second-tier inviter owns sOLE", async function() {
+      // Setup: addr2 is the direct inviter and does not own enough sOLE tokens
+      // addr1 is the second-tier inviter and owns enough sOLE tokens
       // Sign inviter address
       const inviter = addr1.address; // Direct inviter
       const secondTierInviter = addr2.address; // Second-tier inviter
@@ -175,8 +175,8 @@ describe("LinkUp Contract", function() {
         );
     });
 
-    it("Should distribute fees correctly when both inviters own xOLE", async function() {
-      // Setup: Both addr1 and addr2 own enough xOLE tokens
+    it("Should distribute fees correctly when both inviters own sOLE", async function() {
+      // Setup: Both addr1 and addr2 own enough sOLE tokens
       const inviter = addr1.address; // Direct inviter
       const secondTierInviter = addr2.address; // Second-tier inviter
       const invitee = addrs[3].address; // New user being invited
@@ -209,8 +209,8 @@ describe("LinkUp Contract", function() {
         );
     });
 
-    it("Should distribute fees correctly when neither inviter owns xOLE", async function() {
-      // Setup: Neither addr1 nor addr2 owns enough xOLE tokens
+    it("Should distribute fees correctly when neither inviter owns sOLE", async function() {
+      // Setup: Neither addr1 nor addr2 owns enough sOLE tokens
       const inviter = addr1.address; // Direct inviter
       const secondTierInviter = addr2.address; // Second-tier inviter
       const invitee = addrs[3].address; // New user being invited

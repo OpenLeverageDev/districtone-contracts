@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IStageShare} from "./share/IStageShare.sol";
 import {IUniV2ClassPair} from "./common/IUniV2ClassPair.sol";
 import {Erc20Utils} from "./common/Erc20Utils.sol";
-import {IxOLE} from "./common/IxOLE.sol";
+import {ISOLE} from "./common/ISOLE.sol";
 import {IWETH} from "./common/IWETH.sol";
 
 contract OPZap is IOPZapV1 {
@@ -19,15 +19,15 @@ contract OPZap is IOPZapV1 {
     IERC20 public immutable OLE; // Address of the OLE token
     IWETH public immutable WETH; // Native token of the blockchain (e.g., ETH on Ethereum)
     IUniV2ClassPair public immutable OLE_ETH; // Address of the token pair for liquidity : OLE/ETH
-    address public immutable XOLE; // Address of the OpenLeverage XOLE token
+    address public immutable SOLE; // Address of the OpenLeverage SOLE token
     IStageShare public immutable STAGE; // Address of the OpenLeverage Stage share contract
     uint256 public immutable DEX_FEES; // 0.3% dex fees (e.g., 20 means 0.2%)
-    constructor(IERC20 _ole, IWETH _weth, IUniV2ClassPair _pair, uint256 _dexFee, address _xole, IStageShare _stageShare) {
+    constructor(IERC20 _ole, IWETH _weth, IUniV2ClassPair _pair, uint256 _dexFee, address _sole, IStageShare _stageShare) {
         OLE = _ole;
         WETH = _weth;
         OLE_ETH = _pair;
         DEX_FEES = _dexFee;
-        XOLE = _xole;
+        SOLE = _sole;
         STAGE = _stageShare;
     }
 
@@ -42,16 +42,16 @@ contract OPZap is IOPZapV1 {
         WETH.deposit{value: msg.value}();
         uint256 lpReturn = _addLpByETH(msg.value);
         if (lpReturn < minLpReturn) revert InsufficientLpReturn();
-        OLE_ETH.safeApprove(XOLE, lpReturn);
-        IxOLE(XOLE).create_lock_for(msg.sender, lpReturn, unlockTime);
+        OLE_ETH.safeApprove(SOLE, lpReturn);
+        ISOLE(SOLE).create_lock_for(msg.sender, lpReturn, unlockTime);
     }
 
     function increaseXoleByETH(uint256 minLpReturn) external payable override {
         WETH.deposit{value: msg.value}();
         uint256 lpReturn = _addLpByETH(msg.value);
         if (lpReturn < minLpReturn) revert InsufficientLpReturn();
-        OLE_ETH.safeApprove(XOLE, lpReturn);
-        IxOLE(XOLE).increase_amount_for(msg.sender, lpReturn);
+        OLE_ETH.safeApprove(SOLE, lpReturn);
+        ISOLE(SOLE).increase_amount_for(msg.sender, lpReturn);
     }
 
     function buySharesByETH(uint256 stageId, uint256 shares, uint256 timestamp, bytes memory signature) external payable override {

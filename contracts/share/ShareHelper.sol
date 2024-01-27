@@ -4,7 +4,6 @@ pragma solidity 0.8.21;
 import {IStageShare} from "./IStageShare.sol";
 
 contract ShareHelper {
-
     constructor() {}
 
     function getRewards(IStageShare stageShare, address holder, uint256[] memory stageIds) external view returns (uint256[] memory rewards) {
@@ -16,5 +15,4 @@ contract ShareHelper {
             rewards[i] = stageShare.getRewards(queryIds, holder);
         }
     }
-
 }

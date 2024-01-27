@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {IxOLE} from "../common/IxOLE.sol";
+import {ISOLE} from "../common/ISOLE.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Erc20Utils} from "../common/Erc20Utils.sol";
 
-contract MockXOLE is IxOLE {
+contract MockSOLE is ISOLE {
     using Erc20Utils for IERC20;
 
     uint256 constant WEEK = 7 * 86400; // all future times are rounded by week

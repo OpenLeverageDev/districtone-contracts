@@ -10,7 +10,7 @@ describe("Zap Contract", function() {
   let oleCtr;
   let wethCtr;
   let oleEthCtr;
-  let xoleCtr;
+  let soleCtr;
   let stageShareCtr;
   let zapCtr;
   let deployer;
@@ -21,10 +21,10 @@ describe("Zap Contract", function() {
     wethCtr = await (await ethers.getContractFactory("MockWETH")).deploy();
     oleEthCtr = await (await ethers.getContractFactory("MockPancakePair")).deploy(oleCtr, wethCtr,
       ethers.parseEther("100000"), ethers.parseEther("1"));
-    xoleCtr = await (await ethers.getContractFactory("MockXOLE")).deploy(oleEthCtr);
+    soleCtr = await (await ethers.getContractFactory("MockSOLE")).deploy(oleEthCtr);
     stageShareCtr = await (await ethers.getContractFactory("MockStageShare")).deploy(oleCtr, K, B);
     zapCtr = await (await ethers.getContractFactory("OPZap")).deploy(oleCtr, wethCtr,
-      oleEthCtr, DEX_FEES, await xoleCtr, await stageShareCtr);
+      oleEthCtr, DEX_FEES,  soleCtr,  stageShareCtr);
     [deployer, acc1, ...addrs] = await ethers.getSigners();
     ts = (await ethers.provider.getBlock("latest")).timestamp;
   });
@@ -35,9 +35,8 @@ describe("Zap Contract", function() {
       expect(await zapCtr.WETH()).to.equal(await wethCtr.getAddress());
       expect(await zapCtr.OLE_ETH()).to.equal(await oleEthCtr.getAddress());
       expect(await zapCtr.DEX_FEES()).to.equal(DEX_FEES);
-      expect(await zapCtr.XOLE()).to.equal(await xoleCtr.getAddress());
+      expect(await zapCtr.SOLE()).to.equal(await soleCtr.getAddress());
       expect(await zapCtr.STAGE()).to.equal(await stageShareCtr.getAddress());
-      expect(await zapCtr.owner()).to.equal(deployer);
     });
   });
 
@@ -58,7 +57,7 @@ describe("Zap Contract", function() {
     });
   });
 
-  describe("create xole by eth", function() {
+  describe("create sole by eth", function() {
     it("fails if lp return less than minimum", async function() {
       await expect(zapCtr.createXoleByETH(ethers.parseEther("10000000"), 0,
         { value: ethers.parseEther("0.1") }))
@@ -71,39 +70,39 @@ describe("Zap Contract", function() {
         .to.revertedWith("Can only lock until time in the future");
     });
 
-    it("create xole for 0.1eth", async function() {
+    it("create sole for 0.1eth", async function() {
       await zapCtr.createXoleByETH(0, ts + WEEK_4,
         { value: ethers.parseEther("0.1") });
-      expect(await xoleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("15.402586869280504685"));
+      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("15.402586869280504685"));
     });
 
-    it("create xole for 0.00002eth", async function() {
+    it("create sole for 0.00002eth", async function() {
       await zapCtr.createXoleByETH(0, ts + WEEK_4,
         { value: ethers.parseEther("0.00002") });
-      expect(await xoleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("0.003158301646320516"));
+      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("0.003158301646320516"));
       expect(await wethCtr.balanceOf(zapCtr)).to.equal(ethers.parseEther("0.000000000015376133"));
     });
   });
 
-  describe("increase xole by eth", function() {
+  describe("increase sole by eth", function() {
     it("fails if lp return less than minimum", async function() {
       await expect(zapCtr.increaseXoleByETH(ethers.parseEther("10000000"),
         { value: ethers.parseEther("0.1") }))
         .to.revertedWithCustomError(zapCtr, "InsufficientLpReturn");
     });
 
-    it("fails if xole no existing", async function() {
+    it("fails if sole no existing", async function() {
       await expect(zapCtr.increaseXoleByETH(0,
         { value: ethers.parseEther("0.1") }))
         .to.revertedWith("No existing lock found");
     });
 
-    it("increase xole for 0.1eth", async function() {
+    it("increase sole for 0.1eth", async function() {
       await zapCtr.createXoleByETH(0, ts + WEEK_4,
         { value: ethers.parseEther("0.1") });
       await zapCtr.increaseXoleByETH(0,
         { value: ethers.parseEther("0.1") });
-      expect(await xoleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("30.121411716967329357"));
+      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("30.121411716967329357"));
     });
   });
 

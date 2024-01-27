@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-interface IxOLE {
+interface ISOLE {
     function create_lock_for(address to, uint256 _value, uint256 _unlock_time) external;
 
     function increase_amount_for(address to, uint256 _value) external;
