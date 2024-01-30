@@ -1,27 +1,34 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.21;
 
+import {ERC20} from "@openzeppelin-5/contracts/token/ERC20/ERC20.sol";
 import {IOptimismMintableERC20, IERC165} from "./blast/IOptimismMintableERC20.sol";
 import {BlastAdapter} from "./BlastAdapter.sol";
-import {OFT} from "@layerzerolabs/solidity-examples/contracts/token/oft/OFT.sol";
-import {PausableOFT} from "@layerzerolabs/solidity-examples/contracts/token/oft/extension/PausableOFT.sol";
-import {IBlast} from "./blast/IBlast.sol";
 
-/**
- * @title BlastOLE
- * @dev This contract is designed for the Ethereum Layer 2 solution, Optimism, and integrates LayerZero's Omnichain Fungible Token (OFT) functionality.
- */
-contract BlastOLE is IOptimismMintableERC20, PausableOFT {
+contract BlastOLE is IOptimismMintableERC20, ERC20, BlastAdapter {
+    /// @notice Address of the corresponding version of this token on the remote chain.
     address public immutable REMOTE_TOKEN;
+
+    /// @notice Address of the StandardBridge on this network.
     address public immutable BRIDGE;
+
     bool public l2BridgePaused;
 
     error PausedL2Bridge();
 
+    /// @notice Emitted whenever tokens are minted for an account.
+    /// @param account Address of the account tokens are being minted for.
+    /// @param amount  Amount of tokens minted.
     event Mint(address indexed account, uint256 amount);
 
+    /// @notice Emitted whenever tokens are burned from an account.
+    /// @param account Address of the account tokens are being burned from.
+    /// @param amount  Amount of tokens burned.
+    event Burn(address indexed account, uint256 amount);
+
+    /// @notice A modifier that only allows the bridge to call.
     modifier onlyBridge() {
-        require(msg.sender == BRIDGE, "only bridge can mint and burn");
+        require(msg.sender == BRIDGE, "MyCustomL2Token: only bridge can mint and burn");
         _;
     }
 
@@ -29,14 +36,7 @@ contract BlastOLE is IOptimismMintableERC20, PausableOFT {
     /// @param _remoteToken Address of the corresponding L1 token.
     /// @param _name        ERC20 name.
     /// @param _symbol      ERC20 symbol.
-    /// @param _lzEndpoint  LayerZero endpoint
-    constructor(
-        address _bridge,
-        address _remoteToken,
-        string memory _name,
-        string memory _symbol,
-        address _lzEndpoint
-    ) PausableOFT(_name, _symbol, _lzEndpoint) {
+    constructor(address _bridge, address _remoteToken, string memory _name, string memory _symbol) ERC20(_name, _symbol) {
         REMOTE_TOKEN = _remoteToken;
         BRIDGE = _bridge;
     }
@@ -56,9 +56,11 @@ contract BlastOLE is IOptimismMintableERC20, PausableOFT {
     /// @notice ERC165 interface check function.
     /// @param _interfaceId Interface ID to check.
     /// @return Whether or not the interface is supported by this contract.
-    function supportsInterface(bytes4 _interfaceId) public view override(IERC165, OFT) returns (bool) {
+    function supportsInterface(bytes4 _interfaceId) external pure virtual returns (bool) {
+        bytes4 iface1 = type(IERC165).interfaceId;
         // Interface corresponding to the updated OptimismMintableERC20 (this contract).
-        return _interfaceId == type(IOptimismMintableERC20).interfaceId || OFT.supportsInterface(_interfaceId);
+        bytes4 iface2 = type(IOptimismMintableERC20).interfaceId;
+        return _interfaceId == iface1 || _interfaceId == iface2;
     }
 
     /// @notice Allows the StandardBridge on this network to mint tokens.
@@ -71,17 +73,9 @@ contract BlastOLE is IOptimismMintableERC20, PausableOFT {
     }
 
     function burn(address account, uint256 _amount) external override(IOptimismMintableERC20) onlyBridge {
-        account;
-        _amount;
-        revert("cannot be withdrawn");
-    }
-
-    function burn(uint256 _amount) external {
-        _burn(_msgSender(), _amount);
-    }
-
-    function enableClaimable(address gov) public onlyOwner {
-        IBlast(0x4300000000000000000000000000000000000002).configure(IBlast.YieldMode.CLAIMABLE, IBlast.GasMode.CLAIMABLE, gov);
+        if (l2BridgePaused) revert PausedL2Bridge();
+        _burn(account, _amount);
+        emit Burn(account, _amount);
     }
 
     function pauseL2Bridge(bool pause) external onlyOwner {
