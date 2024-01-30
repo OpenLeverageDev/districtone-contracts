@@ -8,6 +8,8 @@ import {Erc20Utils} from "../common/Erc20Utils.sol";
 contract MockSOLE is ISOLE {
     using Erc20Utils for IERC20;
 
+    uint constant oneWeekExtraRaise = 208; // 2.08% * 210 = 436% (4 years raise)
+
     uint256 constant WEEK = 7 * 86400; // all future times are rounded by week
     uint256 constant MAXTIME = 4 * 365 * 86400; // 4 years
 
@@ -97,9 +99,14 @@ contract MockSOLE is ISOLE {
         locked[_addr] = _locked;
         if (_value != 0) {
             oleLpStakeToken.safeTransferFrom(msg.sender, address(this), _value);
-            _balances[_addr] = _balances[_addr] + _value;
         }
-        emit Deposit(_addr, _value, _locked.end, _type, prevBalance, _balances[_addr]);
+        uint weekCount = (locked[_addr].end - (block.timestamp)) / (WEEK);
+        uint extraToken;
+        if (weekCount > 1) {
+            extraToken = (_value * (oneWeekExtraRaise) * (weekCount - 1)) / (10000);
+        }
+        _balances[_addr] = _balances[_addr] + _value + extraToken;
+        emit Deposit(_addr, _value + extraToken, _locked.end, _type, prevBalance, _balances[_addr]);
     }
 
     function _withdraw_for(address owner, address to) internal {

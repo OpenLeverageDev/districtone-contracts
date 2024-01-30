@@ -16,10 +16,8 @@
   "author": "OpenLeverage Dev",
   "license": "ISC",
   "dependencies": {
-    "@layerzerolabs/solidity-examples": "0.0.13",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.3",
     "@openzeppelin-5/contracts": "yarn:@openzeppelin/contracts@5.0.1",
-    "@openzeppelin/contracts": "4.9.3",
     "chai": "^4.3.7",
     "ethers": "^6.9.0",
     "hardhat-gas-reporter": "^1.0.9",

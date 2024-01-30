@@ -73,13 +73,13 @@ describe("Zap Contract", function() {
     it("create sole for 0.1eth", async function() {
       await zapCtr.createXoleByETH(0, ts + WEEK_4,
         { value: ethers.parseEther("0.1") });
-      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("15.402586869280504685"));
+      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("16.043334483042573679"));
     });
 
     it("create sole for 0.00002eth", async function() {
       await zapCtr.createXoleByETH(0, ts + WEEK_4,
         { value: ethers.parseEther("0.00002") });
-      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("0.003158301646320516"));
+      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("0.003289686994807449"));
       expect(await wethCtr.balanceOf(zapCtr)).to.equal(ethers.parseEther("0.000000000015376133"));
     });
   });
@@ -102,7 +102,7 @@ describe("Zap Contract", function() {
         { value: ethers.parseEther("0.1") });
       await zapCtr.increaseXoleByETH(0,
         { value: ethers.parseEther("0.1") });
-      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("30.121411716967329357"));
+      expect(await soleCtr.balanceOf(deployer)).to.equal(ethers.parseEther("31.374462444393170257"));
     });
   });
 
