@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {ISOLE} from "../common/ISOLE.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin-5/contracts/token/ERC20/IERC20.sol";
 import {Erc20Utils} from "../common/Erc20Utils.sol";
 
 contract MockSOLE is ISOLE {

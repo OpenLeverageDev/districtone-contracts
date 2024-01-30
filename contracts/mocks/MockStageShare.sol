@@ -3,7 +3,7 @@ pragma solidity 0.8.21;
 
 import {IErrors} from "../share/IErrors.sol";
 import {Erc20Utils, IERC20} from "../common/Erc20Utils.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin-5/contracts/access/Ownable.sol";
 
 contract MockStageShare is IErrors {
     using Erc20Utils for IERC20;

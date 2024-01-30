@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin-5/contracts/token/ERC20/IERC20.sol";
 import {Erc20Utils} from "./common/Erc20Utils.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "./common/ReentrancyGuard.sol";
 import {SignatureLib} from "./libraries/SignatureLib.sol";
+import {BlastAdapter} from "./BlastAdapter.sol";
 
-contract RewardDistributor is Ownable, ReentrancyGuard {
+/**
+ * @title RewardDistributor
+ * @dev This contract is designed to distribute rewards in a linear fashion over a specified vesting duration.
+ */
+contract RewardDistributor is BlastAdapter, ReentrancyGuard {
     using Erc20Utils for IERC20;
 
     error InvalidParams();
@@ -36,7 +40,7 @@ contract RewardDistributor is Ownable, ReentrancyGuard {
     mapping(address user => mapping(uint256 epochId => bool vested)) public vestedRecord;
     mapping(address user => mapping(bytes32 vestId => Reward reward)) public rewards;
 
-    constructor(IERC20 _oleToken, address _signerAddress, uint256 _vestDuration) Ownable(_msgSender()) {
+    constructor(IERC20 _oleToken, address _signerAddress, uint256 _vestDuration) {
         OLE = IERC20(_oleToken);
         signerAddress = _signerAddress;
         vestDuration = _vestDuration;

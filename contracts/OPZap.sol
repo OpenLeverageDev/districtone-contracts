@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {IOPZapV1} from "./IOPZapV1.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin-5/contracts/utils/math/Math.sol";
+import {IERC20} from "@openzeppelin-5/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IStageShare} from "./share/IStageShare.sol";
 import {IUniV2ClassPair} from "./common/IUniV2ClassPair.sol";
 import {Erc20Utils} from "./common/Erc20Utils.sol";
 import {ISOLE} from "./common/ISOLE.sol";
 import {IWETH} from "./common/IWETH.sol";
+import {BlastAdapter} from "./BlastAdapter.sol";
 
-contract OPZap is IOPZapV1 {
+/**
+ * @title OPZap
+ * @dev This contract is designed caters to users looking to interact with liquidity pools, swap tokens, and buy the stage's shares by ETH.
+ */
+contract OPZap is BlastAdapter {
     error InsufficientLpReturn(); // Error thrown when the LP amount received is less than expected
 
     using Erc20Utils for IERC20;
@@ -31,14 +35,13 @@ contract OPZap is IOPZapV1 {
         STAGE = _stageShare;
     }
 
-    function swapETHForOLE() external payable override returns (uint256) {
+    function swapETHForOLE() external payable {
         WETH.deposit{value: msg.value}();
         uint256 oleBalance = OLE.balanceOfThis();
         _swapETHForOLE(msg.value, msg.sender);
-        return OLE.balanceOfThis() - oleBalance;
     }
 
-    function createXoleByETH(uint256 minLpReturn, uint256 unlockTime) external payable override {
+    function createXoleByETH(uint256 minLpReturn, uint256 unlockTime) external payable {
         WETH.deposit{value: msg.value}();
         uint256 lpReturn = _addLpByETH(msg.value);
         if (lpReturn < minLpReturn) revert InsufficientLpReturn();
@@ -46,7 +49,7 @@ contract OPZap is IOPZapV1 {
         ISOLE(SOLE).create_lock_for(msg.sender, lpReturn, unlockTime);
     }
 
-    function increaseXoleByETH(uint256 minLpReturn) external payable override {
+    function increaseXoleByETH(uint256 minLpReturn) external payable {
         WETH.deposit{value: msg.value}();
         uint256 lpReturn = _addLpByETH(msg.value);
         if (lpReturn < minLpReturn) revert InsufficientLpReturn();
@@ -54,7 +57,7 @@ contract OPZap is IOPZapV1 {
         ISOLE(SOLE).increase_amount_for(msg.sender, lpReturn);
     }
 
-    function buySharesByETH(uint256 stageId, uint256 shares, uint256 timestamp, bytes memory signature) external payable override {
+    function buySharesByETH(uint256 stageId, uint256 shares, uint256 timestamp, bytes memory signature) external payable {
         WETH.deposit{value: msg.value}();
         _swapETHForOLE(msg.value, address(this));
         uint256 boughtOle = OLE.balanceOfThis();

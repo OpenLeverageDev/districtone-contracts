@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.21;
 
-import {IStageShare} from "./IStageShare.sol";
+import {IStageShare} from "../share/IStageShare.sol";
 
 contract ShareHelper {
     constructor() {}

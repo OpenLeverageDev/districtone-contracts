@@ -3,7 +3,7 @@ pragma solidity 0.8.21;
 
 import {MockToken} from "./MockToken.sol";
 import {IUniV2ClassPair} from "../common/IUniV2ClassPair.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin-5/contracts/token/ERC20/IERC20.sol";
 
 contract MockPancakePair is MockToken, IUniV2ClassPair {
     address public token0;

@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import "../common/IWETH.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20} from "@openzeppelin-5/contracts/token/ERC20/ERC20.sol";
 
 contract MockWETH is IWETH, ERC20("WETH", "WETH") {
     function deposit() external payable override {

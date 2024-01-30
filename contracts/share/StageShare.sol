@@ -4,9 +4,9 @@ pragma solidity 0.8.21;
 import {IStageShare} from "./IStageShare.sol";
 import {IErrors} from "./IErrors.sol";
 import {Erc20Utils, IERC20} from "../common/Erc20Utils.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "../common/ReentrancyGuard.sol";
 import {SignatureLib} from "../libraries/SignatureLib.sol";
+import {BlastAdapter} from "../BlastAdapter.sol";
 
 /**
  * @title StageShare Contract
@@ -15,7 +15,7 @@ import {SignatureLib} from "../libraries/SignatureLib.sol";
  * A portion of sale proceeds can be allocated as rewards to current share holders.
  * Implements IStageShare and IErrors interfaces.
  */
-contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
+contract StageShare is BlastAdapter, IErrors, ReentrancyGuard, IStageShare {
     using Erc20Utils for IERC20;
     using SignatureLib for SignatureLib.SignedData;
 
@@ -56,7 +56,7 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
      * @param _k Slope parameter (K) for the share pricing curve.
      * @param _b Y-intercept parameter (B) for the share pricing curve.
      */
-    constructor(IERC20 _ole, address _signIssuerAddress, uint256 _signValidDuration, uint256 _k, uint256 _b) Ownable(_msgSender()) {
+    constructor(IERC20 _ole, address _signIssuerAddress, uint256 _signValidDuration, uint256 _k, uint256 _b) {
         OLE = _ole;
         signIssuerAddress = _signIssuerAddress;
         signValidDuration = _signValidDuration;
@@ -89,7 +89,7 @@ contract StageShare is Ownable, IErrors, ReentrancyGuard, IStageShare {
     }
 
     function buySharesTo(uint256 stageId, uint256 shares, uint256 maxInAmount, uint256 timestamp, bytes memory signature, address to) external override {
-        SignatureLib.SignedData memory signedData = SignatureLib.SignedData(_msgSender(), timestamp);
+        SignatureLib.SignedData memory signedData = SignatureLib.SignedData(to, timestamp);
         if (!signedData.verify(signature, signIssuerAddress, signValidDuration)) revert InvalidSignature();
         _buyShares(stageId, shares, maxInAmount, to);
     }
