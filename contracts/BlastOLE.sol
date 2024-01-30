@@ -14,6 +14,9 @@ import {IBlast} from "./blast/IBlast.sol";
 contract BlastOLE is IOptimismMintableERC20, PausableOFT {
     address public immutable REMOTE_TOKEN;
     address public immutable BRIDGE;
+    bool public l2BridgePaused;
+
+    error PausedL2Bridge();
 
     event Mint(address indexed account, uint256 amount);
 
@@ -62,6 +65,7 @@ contract BlastOLE is IOptimismMintableERC20, PausableOFT {
     /// @param _to     Address to mint tokens to.
     /// @param _amount Amount of tokens to mint.
     function mint(address _to, uint256 _amount) external override(IOptimismMintableERC20) onlyBridge {
+        if (l2BridgePaused) revert PausedL2Bridge();
         _mint(_to, _amount);
         emit Mint(_to, _amount);
     }
@@ -78,5 +82,9 @@ contract BlastOLE is IOptimismMintableERC20, PausableOFT {
 
     function enableClaimable(address gov) public onlyOwner {
         IBlast(0x4300000000000000000000000000000000000002).configure(IBlast.YieldMode.CLAIMABLE, IBlast.GasMode.CLAIMABLE, gov);
+    }
+
+    function pauseL2Bridge(bool pause) external onlyOwner {
+        l2BridgePaused = pause;
     }
 }
