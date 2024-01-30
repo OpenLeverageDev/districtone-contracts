@@ -37,7 +37,6 @@ contract OPZap is BlastAdapter {
 
     function swapETHForOLE() external payable {
         WETH.deposit{value: msg.value}();
-        uint256 oleBalance = OLE.balanceOfThis();
         _swapETHForOLE(msg.value, msg.sender);
     }
 
