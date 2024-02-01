@@ -185,6 +185,7 @@ contract StageShare is BlastAdapter, IErrors, ReentrancyGuard, IStageShare {
         uint256 totalSupply = supply + shares;
         sharesSupply[stageId] = totalSupply;
         emit Trade(stageId, to, true, shares, price, protocolFee, holderFee, totalSupply);
+        _collectFees(protocolFee);
     }
 
     function _sellShares(uint256 stageId, uint256 shares, uint256 minOutAmount) internal returns (uint256 outAmount) {

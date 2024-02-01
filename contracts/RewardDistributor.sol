@@ -3,7 +3,6 @@ pragma solidity 0.8.21;
 
 import {IERC20} from "@openzeppelin-5/contracts/token/ERC20/IERC20.sol";
 import {Erc20Utils} from "./common/Erc20Utils.sol";
-import {ReentrancyGuard} from "./common/ReentrancyGuard.sol";
 import {SignatureLib} from "./libraries/SignatureLib.sol";
 import {BlastAdapter} from "./BlastAdapter.sol";
 
@@ -11,7 +10,7 @@ import {BlastAdapter} from "./BlastAdapter.sol";
  * @title RewardDistributor
  * @dev This contract is designed to distribute rewards in a linear fashion over a specified vesting duration.
  */
-contract RewardDistributor is BlastAdapter, ReentrancyGuard {
+contract RewardDistributor is BlastAdapter {
     using Erc20Utils for IERC20;
 
     error InvalidParams();
