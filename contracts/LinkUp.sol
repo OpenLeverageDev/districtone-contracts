@@ -14,7 +14,7 @@ import {BlastAdapter} from "./BlastAdapter.sol";
 contract LinkUp is BlastAdapter {
     using Erc20Utils for IERC20;
 
-    ISOLE public immutable sOLEToken; // sOLE Token, immutable
+    ISOLE public immutable SOLE; // sOLE Token, immutable
     IERC20 public immutable OLE; // Address of the OLE token
     OPZap public immutable ZAP;
     uint256 public constant MIN_SOLE_BALANCE = 100 * 10 ** 18; // Example: 100 sOLE (adjust as needed)
@@ -39,9 +39,9 @@ contract LinkUp is BlastAdapter {
     error InvalidNewSignerAddress();
     error InvalidSignatureLength();
 
-    constructor(address signer, address _sOLETokenAddress, IERC20 _ole, OPZap _zap) {
+    constructor(address signer, address _sole, IERC20 _ole, OPZap _zap) {
         signerAddress = signer;
-        sOLEToken = ISOLE(_sOLETokenAddress); // Set the sOLE Token address here
+        SOLE = ISOLE(_sole);
         OLE = _ole;
         ZAP = _zap;
     }
@@ -60,11 +60,11 @@ contract LinkUp is BlastAdapter {
         uint256 protocolFeePercent = 100;
 
         // Check sOLE balances of inviters
-        bool directInviterOwnsSOLE = sOLEToken.balanceOf(inviter) >= MIN_SOLE_BALANCE;
+        bool directInviterOwnsSOLE = SOLE.balanceOf(inviter) >= MIN_SOLE_BALANCE;
         bool secondTierInviterOwnsSOLE = false;
         address secondTierInviter = inviterOf[inviter];
         if (secondTierInviter != address(0)) {
-            secondTierInviterOwnsSOLE = sOLEToken.balanceOf(secondTierInviter) >= MIN_SOLE_BALANCE;
+            secondTierInviterOwnsSOLE = SOLE.balanceOf(secondTierInviter) >= MIN_SOLE_BALANCE;
         }
 
         // Calculate fee distribution percent

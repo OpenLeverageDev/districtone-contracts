@@ -28,7 +28,7 @@ contract BlastOLE is IOptimismMintableERC20, ERC20, BlastAdapter {
 
     /// @notice A modifier that only allows the bridge to call.
     modifier onlyBridge() {
-        require(msg.sender == BRIDGE, "MyCustomL2Token: only bridge can mint and burn");
+        require(msg.sender == BRIDGE, "only bridge can mint and burn");
         _;
     }
 
@@ -56,7 +56,7 @@ contract BlastOLE is IOptimismMintableERC20, ERC20, BlastAdapter {
     /// @notice ERC165 interface check function.
     /// @param _interfaceId Interface ID to check.
     /// @return Whether or not the interface is supported by this contract.
-    function supportsInterface(bytes4 _interfaceId) external pure virtual returns (bool) {
+    function supportsInterface(bytes4 _interfaceId) external pure override returns (bool) {
         bytes4 iface1 = type(IERC165).interfaceId;
         // Interface corresponding to the updated OptimismMintableERC20 (this contract).
         bytes4 iface2 = type(IOptimismMintableERC20).interfaceId;
