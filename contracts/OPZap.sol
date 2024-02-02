@@ -70,7 +70,6 @@ contract OPZap is BlastAdapter {
     }
 
     function _swapETHForOLE(uint256 ethAmount, address to) internal {
-        OLE_ETH.sync();
         (uint256 reserve0, uint256 reserve1, ) = OLE_ETH.getReserves();
         IERC20(address(WETH)).transferOut(address(OLE_ETH), ethAmount);
         if (oleIsToken0()) {
