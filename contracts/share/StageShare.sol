@@ -69,8 +69,8 @@ contract StageShare is BlastAdapter, IErrors, ReentrancyGuard, IStageShare {
      */
     function createStage() external override {
         uint256 stageId = ++stageIdx;
-        _buyShares(stageId, 1, 0, _msgSender());
         emit StageCreated(stageId, _msgSender());
+        _buyShares(stageId, 1, 0, _msgSender());
     }
 
     /**
