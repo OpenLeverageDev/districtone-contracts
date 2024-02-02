@@ -166,6 +166,12 @@ contract StageShare is BlastAdapter, IErrors, ReentrancyGuard, IStageShare {
         return _getPrice(sharesSupply[stageId] - amount, amount, K, B);
     }
 
+    function getBuyPriceWithFees(uint256 stageId, uint256 amount) external view override returns (uint256) {
+        uint256 price = _getPrice(sharesSupply[stageId], amount, K, B);
+        (uint256 protocolFee, uint256 holderFee) = _getFees(price);
+        return price + protocolFee + holderFee;
+    }
+
     function getSellPriceWithFees(uint256 stageId, uint256 amount) external view override returns (uint256) {
         uint256 price = _getPrice(sharesSupply[stageId] - amount, amount, K, B);
         (uint256 protocolFee, uint256 holderFee) = _getFees(price);
@@ -177,9 +183,10 @@ contract StageShare is BlastAdapter, IErrors, ReentrancyGuard, IStageShare {
         if (stageId > stageIdx) revert StageNotExists();
         uint256 supply = sharesSupply[stageId];
         uint256 price = _getPrice(supply, shares, K, B);
-        if (price > maxInAmount) revert InsufficientInAmount();
-        if (price > 0 && price != OLE.safeTransferIn(_msgSender(), price)) revert InsufficientInAmount();
         (uint256 protocolFee, uint256 holderFee) = _getFees(price);
+        uint256 priceWithFees = price + protocolFee + holderFee;
+        if (priceWithFees > maxInAmount) revert InsufficientInAmount();
+        if (priceWithFees > 0 && priceWithFees != OLE.safeTransferIn(_msgSender(), priceWithFees)) revert InsufficientInAmount();
         _updateSharesReward(stageId, holderFee, to);
         sharesBalance[stageId][to] += shares;
         uint256 totalSupply = supply + shares;

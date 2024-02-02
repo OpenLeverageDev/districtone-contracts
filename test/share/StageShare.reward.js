@@ -43,12 +43,13 @@ contract("StageShare", function(accounts) {
 
   describe("get reward", function() {
     it("reward change after buy shares", async () => {
-      await shareCtr.buyShares(stageId, new BN(1), price1, signTimeStamp, sign, { from: trader });
+      await shareCtr.buyShares(stageId, new BN(1), await shareCtr.getBuyPriceWithFees(stageId, 1), signTimeStamp, sign, { from: trader });
       expect(await shareCtr.rewardPerShareStored(stageId)).to.equal(ethers.parseEther("5055000000000000000"));
       expect(await shareCtr.getRewards([stageId], owner)).to.equal(ethers.parseEther("5.055"));
     });
 
     it("reward is 0 after buy shares", async () => {
+      await shareCtr.setFees(0, 0, { from: owner });
       await shareCtr.buyShares(stageId, new BN(1), price1, signTimeStamp, sign, { from: trader });
       expect(await shareCtr.getRewards([stageId], trader)).to.bignumber.eq(new BN(0));
     });
@@ -62,7 +63,7 @@ contract("StageShare", function(accounts) {
     });
 
     it("seller reward is 0 and holders reward increases after sell 1 share hold 0 share", async () => {
-      await shareCtr.buyShares(stageId, new BN(1), price1, signTimeStamp, sign, { from: trader });
+      await shareCtr.buyShares(stageId, new BN(1), await shareCtr.getBuyPriceWithFees(stageId, 1), signTimeStamp, sign, { from: trader });
       await shareCtr.sellShares(stageId, new BN(1), minOutAmount, { from: trader });
       let reward = price1.mul(holderFee).muln(2).div(FEE_DENOMINATOR);
       expect(await shareCtr.getRewards([stageId], trader)).to.bignumber.eq(new BN(0));
@@ -70,7 +71,7 @@ contract("StageShare", function(accounts) {
     });
 
     it("seller and holders reward increases after sell 1 share and hold 1 share", async () => {
-      await shareCtr.buyShares(stageId, new BN(2), price1.add(price2), signTimeStamp, sign, { from: trader });
+      await shareCtr.buyShares(stageId, new BN(2), await shareCtr.getBuyPriceWithFees(stageId, 2), signTimeStamp, sign, { from: trader });
       let buyReward = price1.add(price2).mul(holderFee).div(FEE_DENOMINATOR);
       await shareCtr.sellShares(stageId, new BN(1), minOutAmount, { from: trader });
       let sellReward = price2.mul(holderFee).div(FEE_DENOMINATOR).divn(2);
@@ -83,7 +84,7 @@ contract("StageShare", function(accounts) {
   describe("withdraw reward", function() {
     let traderReward;
     beforeEach(async () => {
-      await shareCtr.buyShares(stageId, new BN(2), price1.add(price2), signTimeStamp, sign, { from: trader });
+      await shareCtr.buyShares(stageId, new BN(2), await shareCtr.getBuyPriceWithFees(stageId, 2), signTimeStamp, sign, { from: trader });
       await shareCtr.sellShares(stageId, new BN(1), minOutAmount, { from: trader });
       traderReward = price2.mul(holderFee).div(FEE_DENOMINATOR).divn(2);
     });

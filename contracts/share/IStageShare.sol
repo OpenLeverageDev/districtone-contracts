@@ -32,6 +32,8 @@ interface IStageShare {
 
     function getSellPrice(uint256 stageId, uint256 amount) external view returns (uint256);
 
+    function getBuyPriceWithFees(uint256 stageId, uint256 amount) external view returns (uint256);
+
     function getSellPriceWithFees(uint256 stageId, uint256 amount) external view returns (uint256);
 
     function getRewards(uint256[] memory stageIds, address holder) external view returns (uint256 reward);

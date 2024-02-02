@@ -111,7 +111,7 @@ contract("StageShare", function(accounts) {
     it("buy shares will collect fee", async () => {
       await shareCtr.setFees(protocolFee, holderFee, { from: owner });
       await shareCtr.setProtocolFeeDestination(treasury, { from: owner });
-      await shareCtr.buyShares(stageId, new BN(1), price1, signTimeStamp1, sign1, { from: acc1 });
+      await shareCtr.buyShares(stageId, new BN(1), await shareCtr.getBuyPriceWithFees(stageId, 1), signTimeStamp1, sign1, { from: acc1 });
       expect(await oleCtr.balanceOf(treasury)).to.bignumber.eq(protocolFee.mul(price1).divn(FEE_DENOMINATOR));
     });
 
