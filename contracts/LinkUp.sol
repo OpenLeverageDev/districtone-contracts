@@ -17,7 +17,7 @@ contract LinkUp is BlastAdapter {
     ISOLE public immutable SOLE; // sOLE Token, immutable
     IERC20 public immutable OLE; // Address of the OLE token
     OPZap public immutable ZAP;
-    uint256 public constant MIN_SOLE_BALANCE = 100 * 10 ** 18; // Example: 100 sOLE (adjust as needed)
+    uint256 public minSoleBalance = 100 * 10 ** 18; // Example: 100 sOLE (adjust as needed)
     address public signerAddress;
     uint256 public joinFee = 0.0015 ether;
     mapping(address => address) public inviterOf;
@@ -30,6 +30,7 @@ contract LinkUp is BlastAdapter {
     event WithdrawnProtocolFee(address to, uint256 amount);
     event FeeChanged(uint256 newFee);
     event SignerChanged(address indexed newSigner);
+    event MinSoleBalanceChanged(uint256 newSoleBalance);
 
     error IncorrectFee();
     error AlreadyJoined();
@@ -60,11 +61,11 @@ contract LinkUp is BlastAdapter {
         uint256 protocolFeePercent = 100;
 
         // Check sOLE balances of inviters
-        bool directInviterOwnsSOLE = SOLE.balanceOf(inviter) >= MIN_SOLE_BALANCE;
+        bool directInviterOwnsSOLE = SOLE.balanceOf(inviter) >= minSoleBalance;
         bool secondTierInviterOwnsSOLE = false;
         address secondTierInviter = inviterOf[inviter];
         if (secondTierInviter != address(0)) {
-            secondTierInviterOwnsSOLE = SOLE.balanceOf(secondTierInviter) >= MIN_SOLE_BALANCE;
+            secondTierInviterOwnsSOLE = SOLE.balanceOf(secondTierInviter) >= minSoleBalance;
         }
 
         // Calculate fee distribution percent
@@ -74,16 +75,16 @@ contract LinkUp is BlastAdapter {
             protocolFeePercent = 0;
         } else if (directInviterOwnsSOLE) {
             directInviterFeePercent = 80;
-            secondTierInviterFeePercent = 15;
-            protocolFeePercent = 5;
-        } else if (secondTierInviterOwnsSOLE) {
-            directInviterFeePercent = 65;
-            secondTierInviterFeePercent = 30;
-            protocolFeePercent = 5;
-        } else {
-            directInviterFeePercent = 70;
-            secondTierInviterFeePercent = 20;
+            secondTierInviterFeePercent = 10;
             protocolFeePercent = 10;
+        } else if (secondTierInviterOwnsSOLE) {
+            directInviterFeePercent = 50;
+            secondTierInviterFeePercent = 30;
+            protocolFeePercent = 20;
+        } else {
+            directInviterFeePercent = 60;
+            secondTierInviterFeePercent = 20;
+            protocolFeePercent = 20;
         }
         if (secondTierInviter == address(0)) {
             protocolFeePercent += secondTierInviterFeePercent; // Add to protocol fee if no second-tier inviter
@@ -162,5 +163,10 @@ contract LinkUp is BlastAdapter {
         if (newSigner == address(0)) revert InvalidNewSignerAddress();
         signerAddress = newSigner;
         emit SignerChanged(newSigner);
+    }
+
+    function setMinSoleBalance(uint256 newMinSoleBalance) external onlyOwner {
+        minSoleBalance = newMinSoleBalance;
+        emit MinSoleBalanceChanged(newMinSoleBalance);
     }
 }
