@@ -3,7 +3,7 @@ pragma solidity 0.8.21;
 
 import {Math} from "@openzeppelin-5/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin-5/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IStageShare} from "./share/IStageShare.sol";
+import {ISpaceShare} from "./share/ISpaceShare.sol";
 import {IUniV2ClassPair} from "./common/IUniV2ClassPair.sol";
 import {Erc20Utils} from "./common/Erc20Utils.sol";
 import {ISOLE} from "./common/ISOLE.sol";
@@ -12,7 +12,7 @@ import {BlastAdapter} from "./BlastAdapter.sol";
 
 /**
  * @title OPZap
- * @dev This contract is designed caters to users looking to interact with liquidity pools, swap tokens, and buy the stage's shares by ETH.
+ * @dev This contract is designed caters to users looking to interact with liquidity pools, swap tokens, and buy the space's shares by ETH.
  */
 contract OPZap is BlastAdapter {
     error InsufficientLpReturn(); // Error thrown when the LP amount received is less than expected
@@ -24,15 +24,15 @@ contract OPZap is BlastAdapter {
     IWETH public immutable WETH; // Native token of the blockchain (e.g., ETH on Ethereum)
     IUniV2ClassPair public immutable OLE_ETH; // Address of the token pair for liquidity : OLE/ETH
     address public immutable SOLE; // Address of the OpenLeverage SOLE token
-    IStageShare public immutable STAGE; // Address of the OpenLeverage Stage share contract
+    ISpaceShare public immutable SPACE; // Address of the OpenLeverage Space share contract
     uint256 public immutable DEX_FEES; // 0.3% dex fees (e.g., 20 means 0.2%)
-    constructor(IERC20 _ole, IWETH _weth, IUniV2ClassPair _pair, uint256 _dexFee, address _sole, IStageShare _stageShare) {
+    constructor(IERC20 _ole, IWETH _weth, IUniV2ClassPair _pair, uint256 _dexFee, address _sole, ISpaceShare _spaceShare) {
         OLE = _ole;
         WETH = _weth;
         OLE_ETH = _pair;
         DEX_FEES = _dexFee;
         SOLE = _sole;
-        STAGE = _stageShare;
+        SPACE = _spaceShare;
     }
 
     function swapETHForOLE() external payable {
@@ -56,12 +56,12 @@ contract OPZap is BlastAdapter {
         ISOLE(SOLE).increase_amount_for(msg.sender, lpReturn);
     }
 
-    function buySharesByETH(uint256 stageId, uint256 shares, uint256 timestamp, bytes memory signature) external payable {
+    function buySharesByETH(uint256 spaceId, uint256 shares, uint256 timestamp, bytes memory signature) external payable {
         WETH.deposit{value: msg.value}();
         _swapETHForOLE(msg.value, address(this));
         uint256 boughtOle = OLE.balanceOfThis();
-        OLE.safeApprove(address(STAGE), boughtOle);
-        STAGE.buySharesTo(stageId, shares, boughtOle, timestamp, signature, msg.sender);
+        OLE.safeApprove(address(SPACE), boughtOle);
+        SPACE.buySharesTo(spaceId, shares, boughtOle, timestamp, signature, msg.sender);
         // refund ole
         uint256 oleBalance = OLE.balanceOfThis();
         if (oleBalance > 0) {

@@ -1,16 +1,16 @@
 const {
   newOLE,
-  newStageWithOle,
+  newSpaceWithOle,
   price1, invalidSignatureError, expiredSignatureError
 } = require("./shareUtil");
 const { BN, expectEvent, expectRevert } = require("@openzeppelin/test-helpers");
 const { web3, ethers } = require("hardhat");
 const { expect } = require("chai");
 const { hexStringToArray } = require("../util/EtheUtil");
-contract("StageShare", function(accounts) {
+contract("SpaceShare.sol", function(accounts) {
   let shareCtr;
   let oleCtr;
-  let stageId = new BN(1);
+  let spaceId = new BN(1);
   let owner = accounts[0];
   let trader = accounts[1];
   let maxInAmount = web3.utils.toWei("10000");
@@ -22,27 +22,27 @@ contract("StageShare", function(accounts) {
   beforeEach(async () => {
     oleCtr = await newOLE(owner);
     [issuer, invalidIssuer] = await ethers.getSigners();
-    shareCtr = await newStageWithOle(oleCtr.address, issuer.address, owner);
+    shareCtr = await newSpaceWithOle(oleCtr.address, issuer.address, owner);
     timestamp = (await web3.eth.getBlock("latest")).timestamp;
-    await shareCtr.createStage({ from: owner });
+    await shareCtr.createSpace({ from: owner });
     await oleCtr.mint(trader, maxInAmount);
     await oleCtr.approve(shareCtr.address, maxInAmount, { from: trader });
   });
 
   it("should successfully verify a valid signature", async () => {
     let validSignature = await sign(trader, timestamp, issuer);
-    await shareCtr.buyShares(stageId, new BN(1), price1, timestamp, validSignature, { from: trader });
+    await shareCtr.buyShares(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader });
   });
 
   it("should fail when signature content is inconsistent", async () => {
     let validSignature = await sign(accounts[2], timestamp, issuer);
     await expectRevert(
-      shareCtr.buyShares(stageId, new BN(1), price1, timestamp, validSignature, { from: trader }),
+      shareCtr.buyShares(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader }),
       invalidSignatureError
     );
     validSignature = await sign(trader, timestamp - 1, issuer);
     await expectRevert(
-      shareCtr.buyShares(stageId, new BN(1), price1, timestamp, validSignature, { from: trader }),
+      shareCtr.buyShares(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader }),
       invalidSignatureError
     );
   });
@@ -51,7 +51,7 @@ contract("StageShare", function(accounts) {
     let newTimestamp = timestamp - 6000; // 100 minutes ago
     let expiredSignature = await sign(trader, newTimestamp, issuer);
     await expectRevert(
-      shareCtr.buyShares(stageId, new BN(1), price1, newTimestamp, expiredSignature, { from: trader }),
+      shareCtr.buyShares(spaceId, new BN(1), price1, newTimestamp, expiredSignature, { from: trader }),
       expiredSignatureError
     );
   });
@@ -59,7 +59,7 @@ contract("StageShare", function(accounts) {
   it("should fail when owner address is inconsistent", async () => {
     let validSignature = await sign(trader, timestamp, invalidIssuer);
     await expectRevert(
-      shareCtr.buyShares(stageId, new BN(1), price1, timestamp, validSignature, { from: trader }),
+      shareCtr.buyShares(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader }),
       invalidSignatureError
     );
   });

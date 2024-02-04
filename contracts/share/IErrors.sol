@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 interface IErrors {
     error InvalidSignature();
     error ZeroAddress();
-    error StageNotExists();
+    error SpaceNotExists();
     error CannotSellLastShare();
     error InsufficientShares();
     error InsufficientInAmount();

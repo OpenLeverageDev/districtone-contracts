@@ -5,7 +5,7 @@ import {IErrors} from "../share/IErrors.sol";
 import {Erc20Utils, IERC20} from "../common/Erc20Utils.sol";
 import {Ownable} from "@openzeppelin-5/contracts/access/Ownable.sol";
 
-contract MockStageShare is IErrors {
+contract MockSpaceShare is IErrors {
     using Erc20Utils for IERC20;
     // Immutable curve parameters for share pricing.
     uint256 public immutable K; // Slope of the pricing curve.
@@ -19,10 +19,10 @@ contract MockStageShare is IErrors {
     uint16 public holderFeePercent; // Holder fee percentage (e.g., 500 for 5%).
 
     // Mappings for managing shares and rewards.
-    mapping(uint256 stageId => uint256 supply) public sharesSupply; // Mapping of stageId to shares supply.
-    mapping(uint256 stageId => mapping(address holder => uint256 balance)) public sharesBalance; // Mapping of stageId and holder address to share balance.
+    mapping(uint256 spaceId => uint256 supply) public sharesSupply; // Mapping of spaceId to shares supply.
+    mapping(uint256 spaceId => mapping(address holder => uint256 balance)) public sharesBalance; // Mapping of spaceId and holder address to share balance.
 
-    uint256 public stageIdx; // Index to track the current stage.
+    uint256 public spaceIdx; // Index to track the current space.
 
     constructor(IERC20 _ole, uint256 _k, uint256 _b) {
         OLE = _ole;
@@ -30,39 +30,39 @@ contract MockStageShare is IErrors {
         B = _b;
     }
 
-    function createStage() external {
-        uint256 stageId = ++stageIdx;
-        _buyShares(stageId, 1, 0, msg.sender);
+    function createSpace() external {
+        uint256 spaceId = ++spaceIdx;
+        _buyShares(spaceId, 1, 0, msg.sender);
     }
 
-    function buySharesTo(uint256 stageId, uint256 shares, uint256 maxInAmount, uint256 timestamp, bytes memory signature, address to) external {
-        _buyShares(stageId, shares, maxInAmount, to);
+    function buySharesTo(uint256 spaceId, uint256 shares, uint256 maxInAmount, uint256 timestamp, bytes memory signature, address to) external {
+        _buyShares(spaceId, shares, maxInAmount, to);
     }
 
-    function getBuyPrice(uint256 stageId, uint256 amount) external view returns (uint256) {
-        return _getPrice(sharesSupply[stageId], amount, K, B);
+    function getBuyPrice(uint256 spaceId, uint256 amount) external view returns (uint256) {
+        return _getPrice(sharesSupply[spaceId], amount, K, B);
     }
 
-    function getSellPrice(uint256 stageId, uint256 amount) external view returns (uint256) {
-        return _getPrice(sharesSupply[stageId] - amount, amount, K, B);
+    function getSellPrice(uint256 spaceId, uint256 amount) external view returns (uint256) {
+        return _getPrice(sharesSupply[spaceId] - amount, amount, K, B);
     }
 
-    function getSellPriceWithFees(uint256 stageId, uint256 amount) external view returns (uint256) {
-        uint256 price = _getPrice(sharesSupply[stageId] - amount, amount, K, B);
+    function getSellPriceWithFees(uint256 spaceId, uint256 amount) external view returns (uint256) {
+        uint256 price = _getPrice(sharesSupply[spaceId] - amount, amount, K, B);
         (uint256 protocolFee, uint256 holderFee) = _getFees(price);
         return price - protocolFee - holderFee;
     }
 
-    function _buyShares(uint256 stageId, uint256 shares, uint256 maxInAmount, address to) internal {
+    function _buyShares(uint256 spaceId, uint256 shares, uint256 maxInAmount, address to) internal {
         if (shares == 0) revert ZeroAmount();
-        if (stageId > stageIdx) revert StageNotExists();
-        uint256 supply = sharesSupply[stageId];
+        if (spaceId > spaceIdx) revert SpaceNotExists();
+        uint256 supply = sharesSupply[spaceId];
         uint256 price = _getPrice(supply, shares, K, B);
         if (price > maxInAmount) revert InsufficientInAmount();
         if (price > 0 && price != OLE.safeTransferIn(msg.sender, price)) revert InsufficientInAmount();
-        sharesBalance[stageId][to] += shares;
+        sharesBalance[spaceId][to] += shares;
         uint256 totalSupply = supply + shares;
-        sharesSupply[stageId] = totalSupply;
+        sharesSupply[spaceId] = totalSupply;
     }
 
     function _getPrice(uint256 supply, uint256 amount, uint256 k, uint256 b) internal pure returns (uint256) {

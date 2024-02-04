@@ -51,14 +51,22 @@ describe("RewardDistributor Contract", function() {
       await expect(rewardCtr.setVestDuration(0))
         .to.revertedWithCustomError(rewardCtr, "InvalidDuration");
     });
+
+    it("recycle only owner", async function() {
+      oleCtr.transfer(rewardCtr, 1);
+      await expect(rewardCtr.connect(acc1).recycle(acc1, 1))
+        .to.revertedWithCustomError(rewardCtr, "OwnableUnauthorizedAccount");
+      await rewardCtr.recycle(acc1, 1);
+      expect(await oleCtr.balanceOf(acc1)).to.equal(1);
+    });
   });
 
   describe("vests", function() {
-    let epochIds = [1];
+    let airdropIds = [1];
     let amount = ethers.parseEther("100");
     it("emit event", async function() {
-      let vestId = getVestId(acc1.address, amount, epochIds);
-      let tx = rewardCtr.connect(acc1).vests(epochIds, amount, await signer.signMessage(hexStringToArray(vestId)));
+      let vestId = getVestId(acc1.address, amount, airdropIds);
+      let tx = rewardCtr.connect(acc1).vests(airdropIds, amount, await signer.signMessage(hexStringToArray(vestId)));
       await expect(tx)
         .to.emit(rewardCtr, "VestStarted")
         .withArgs(vestId, acc1.address, amount, ts + 1, ts + 1 + VEST_DURATION
@@ -69,43 +77,43 @@ describe("RewardDistributor Contract", function() {
       expect(rewardStruct.startTime).to.equal(ts + 1);
       expect(rewardStruct.endTime).to.equal(ts + 1 + VEST_DURATION);
     });
-    it("vest success with 1 epoch", async function() {
-      let vestId = getVestId(acc1.address, amount, epochIds);
-      await rewardCtr.connect(acc1).vests(epochIds, amount, await signer.signMessage(hexStringToArray(vestId)));
+    it("vest success with 1 airdrop", async function() {
+      let vestId = getVestId(acc1.address, amount, airdropIds);
+      await rewardCtr.connect(acc1).vests(airdropIds, amount, await signer.signMessage(hexStringToArray(vestId)));
 
     });
-    it("vest success with 96 epochs", async function() {
-      let epochIds = Array.from({ length: 96 }, (value, index) => index + 1);
-      let vestId = getVestId(acc1.address, amount, epochIds);
-      await rewardCtr.connect(acc1).vests(epochIds, amount, await signer.signMessage(hexStringToArray(vestId)));
+    it("vest success with 96 airdrops", async function() {
+      let airdropIds = Array.from({ length: 96 }, (value, index) => index + 1);
+      let vestId = getVestId(acc1.address, amount, airdropIds);
+      await rewardCtr.connect(acc1).vests(airdropIds, amount, await signer.signMessage(hexStringToArray(vestId)));
     });
-    it("fails if epochIds is empty", async function() {
+    it("fails if airdropIds is empty", async function() {
       let vestId = getVestId(acc1.address, amount, []);
       await expect(rewardCtr.connect(acc1).vests([], amount, await signer.signMessage(hexStringToArray(vestId))))
         .to.revertedWithCustomError(rewardCtr, "InvalidParams");
     });
-    it("fails if epoch was vested", async function() {
-      let vestId = getVestId(acc1.address, amount, epochIds);
-      await rewardCtr.connect(acc1).vests(epochIds, amount, await signer.signMessage(hexStringToArray(vestId)));
-      await expect(rewardCtr.connect(acc1).vests(epochIds, amount, await signer.signMessage(hexStringToArray(vestId))))
+    it("fails if airdrop was vested", async function() {
+      let vestId = getVestId(acc1.address, amount, airdropIds);
+      await rewardCtr.connect(acc1).vests(airdropIds, amount, await signer.signMessage(hexStringToArray(vestId)));
+      await expect(rewardCtr.connect(acc1).vests(airdropIds, amount, await signer.signMessage(hexStringToArray(vestId))))
         .to.revertedWithCustomError(rewardCtr, "AlreadyVested");
     });
     it("fails if signature is invalid", async function() {
-      let vestId = getVestId(acc1.address, amount, epochIds);
-      await expect(rewardCtr.connect(acc1).vests(epochIds, amount, await acc1.signMessage(hexStringToArray(vestId))))
+      let vestId = getVestId(acc1.address, amount, airdropIds);
+      await expect(rewardCtr.connect(acc1).vests(airdropIds, amount, await acc1.signMessage(hexStringToArray(vestId))))
         .to.revertedWithCustomError(rewardCtr, "InvalidSignature");
     });
   });
 
   describe("withdraws", function() {
-    let epochIds = [1];
+    let airdropIds = [1];
     let amount = ethers.parseEther("100");
     let releaseablePerSecond = ethers.parseEther("100") / BigInt(VEST_DURATION);
     let vest1Id;
     beforeEach(async function() {
-      vest1Id = getVestId(acc1.address, amount, epochIds);
+      vest1Id = getVestId(acc1.address, amount, airdropIds);
       await oleCtr.transfer(rewardCtr, ethers.parseEther("10000"));
-      await rewardCtr.connect(acc1).vests(epochIds, amount, await signer.signMessage(hexStringToArray(vest1Id)));
+      await rewardCtr.connect(acc1).vests(airdropIds, amount, await signer.signMessage(hexStringToArray(vest1Id)));
     });
 
     it("emit event", async function() {
@@ -172,8 +180,8 @@ describe("RewardDistributor Contract", function() {
   });
 });
 
-function getVestId(user, amount, epochIds) {
+function getVestId(user, amount, airdropIds) {
   return ethers.solidityPackedKeccak256(
-    ["address", "uint256", "uint256[]"], [user, amount, epochIds]
+    ["address", "uint256", "uint256[]"], [user, amount, airdropIds]
   );
 }

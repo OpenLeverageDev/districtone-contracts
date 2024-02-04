@@ -11,7 +11,7 @@ describe("Zap Contract", function() {
   let wethCtr;
   let oleEthCtr;
   let soleCtr;
-  let stageShareCtr;
+  let spaceShareCtr;
   let zapCtr;
   let deployer;
   let acc1;
@@ -22,9 +22,9 @@ describe("Zap Contract", function() {
     oleEthCtr = await (await ethers.getContractFactory("MockPancakePair")).deploy(oleCtr, wethCtr,
       ethers.parseEther("100000"), ethers.parseEther("1"));
     soleCtr = await (await ethers.getContractFactory("MockSOLE")).deploy(oleEthCtr);
-    stageShareCtr = await (await ethers.getContractFactory("MockStageShare")).deploy(oleCtr, K, B);
+    spaceShareCtr = await (await ethers.getContractFactory("MockSpaceShare")).deploy(oleCtr, K, B);
     zapCtr = await (await ethers.getContractFactory("OPZap")).deploy(oleCtr, wethCtr,
-      oleEthCtr, DEX_FEES,  soleCtr,  stageShareCtr);
+      oleEthCtr, DEX_FEES,  soleCtr,  spaceShareCtr);
     [deployer, acc1, ...addrs] = await ethers.getSigners();
     ts = (await ethers.provider.getBlock("latest")).timestamp;
   });
@@ -36,7 +36,7 @@ describe("Zap Contract", function() {
       expect(await zapCtr.OLE_ETH()).to.equal(await oleEthCtr.getAddress());
       expect(await zapCtr.DEX_FEES()).to.equal(DEX_FEES);
       expect(await zapCtr.SOLE()).to.equal(await soleCtr.getAddress());
-      expect(await zapCtr.STAGE()).to.equal(await stageShareCtr.getAddress());
+      expect(await zapCtr.SPACE()).to.equal(await spaceShareCtr.getAddress());
     });
   });
 
@@ -107,28 +107,28 @@ describe("Zap Contract", function() {
   });
 
   describe("buy shares by eth", function() {
-    let stageId = 1;
+    let spaceId = 1;
     beforeEach(async function() {
-      await stageShareCtr.createStage();
+      await spaceShareCtr.createSpace();
     });
 
     it("fails if for insufficient eth", async function() {
-      await expect(zapCtr.connect(acc1).buySharesByETH(stageId, 10, 0, "0x00",
+      await expect(zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00",
         { value: ethers.parseEther("0.00001") }))
-        .to.revertedWithCustomError(stageShareCtr, "InsufficientInAmount");
+        .to.revertedWithCustomError(spaceShareCtr, "InsufficientInAmount");
     });
 
     it("buy shares for 0.01eth", async function() {
-      await zapCtr.connect(acc1).buySharesByETH(stageId, 10, 0, "0x00",
+      await zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00",
         { value: ethers.parseEther("0.01") });
-      expect(await stageShareCtr.sharesBalance(stageId, acc1)).to.equal(10);
+      expect(await spaceShareCtr.sharesBalance(spaceId, acc1)).to.equal(10);
       expect(await oleCtr.balanceOf(acc1)).to.equal(ethers.parseEther("882.148209114086982351"));
     });
 
     it("buy shares for 0.1eth", async function() {
-      await zapCtr.connect(acc1).buySharesByETH(stageId, 10, 0, "0x00",
+      await zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00",
         { value: ethers.parseEther("0.1") });
-      expect(await stageShareCtr.sharesBalance(stageId, acc1)).to.equal(10);
+      expect(await spaceShareCtr.sharesBalance(spaceId, acc1)).to.equal(10);
       expect(await oleCtr.balanceOf(acc1)).to.equal(ethers.parseEther("8964.743237099340759263"));
     });
   });

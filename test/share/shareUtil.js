@@ -1,7 +1,7 @@
 const { ZERO_ADDRESS } = require("@openzeppelin/test-helpers/src/constants");
 const { web3 } = require("hardhat");
 const { toBN, hexStringToArray } = require("../util/EtheUtil");
-const StageShare = artifacts.require("StageShare");
+const SpaceShare = artifacts.require("SpaceShare.sol");
 const MockToken = artifacts.require("MockToken");
 const { AbiCoder, ethers } = require("ethers");
 
@@ -9,7 +9,7 @@ let notOwnerError = "OwnableUnauthorizedAccount";
 let invalidParamError = "InvalidParam";
 let zeroAddressError = "ZeroAddress";
 let zeroAmountError = "ZeroAmount";
-let stageNotExistsError = "StageNotExists";
+let spaceNotExistsError = "SpaceNotExists";
 let insufficientInAmountError = "InsufficientInAmount";
 let insufficientOutAmountError = "InsufficientOutAmount";
 let insufficientSharesError = "InsufficientShares";
@@ -25,15 +25,15 @@ let price2 = toBN(2).mul(K).add(B);
 let price3 = toBN(3).mul(K).add(B);
 let FEE_DENOMINATOR = toBN(10000);
 
-const newStageShare = async (owner) => {
-  return await StageShare.new(ZERO_ADDRESS, ZERO_ADDRESS, 0, 0, 0, { from: owner });
+const newSpaceShare = async (owner) => {
+  return await SpaceShare.new(ZERO_ADDRESS, ZERO_ADDRESS, 0, 0, 0, { from: owner });
 };
 
 const newOLE = async (owner) => {
   return await MockToken.new("ole", "ole", toBN(web3.utils.toWei("1000000000", "ether")), { from: owner });
 };
-const newStageShareWithOle = async (ole, issuer, owner) => {
-  return await StageShare.new(ole, issuer, 3000, K, B, { from: owner });
+const newSpaceShareWithOle = async (ole, issuer, owner) => {
+  return await SpaceShare.new(ole, issuer, 3000, K, B, { from: owner });
 };
 
 const getSign = async (signer, trader) => {
@@ -50,10 +50,10 @@ const clearOleBalance = async (ole, account) => {
 };
 
 module.exports = {
-  newStage: newStageShare,
+  newSpace: newSpaceShare,
   newOLE,
   getSign,
-  newStageWithOle: newStageShareWithOle,
+  newSpaceWithOle: newSpaceShareWithOle,
   clearOleBalance,
   K,
   B,
@@ -64,7 +64,7 @@ module.exports = {
   price2,
   price3,
   zeroAmountError,
-  stageNotExistsError,
+  spaceNotExistsError,
   insufficientInAmountError,
   FEE_DENOMINATOR,
   notSellLastShareError,

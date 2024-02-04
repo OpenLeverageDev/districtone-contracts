@@ -1,14 +1,14 @@
-const {newStage, invalidParamError, zeroAddressError, notOwnerError} = require("./shareUtil");
+const {newSpace, invalidParamError, zeroAddressError, notOwnerError} = require("./shareUtil");
 const {expect} = require("chai");
 const {ZERO_ADDRESS} = require("@openzeppelin/test-helpers/src/constants");
 const {BN, expectRevert} = require("@openzeppelin/test-helpers");
 const {toBN} = require("../util/EtheUtil");
-contract('StageShare', function (accounts) {
+contract('SpaceShare.sol', function (accounts) {
     let shareCtr;
     let owner = accounts[0];
     let acc1 = accounts[1];
     beforeEach(async () => {
-        shareCtr = await newStage(owner);
+        shareCtr = await newSpace(owner);
     });
 
     it('constructor initializes', async () => {

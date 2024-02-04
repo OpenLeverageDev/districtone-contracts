@@ -36,7 +36,7 @@ contract RewardDistributor is BlastAdapter {
     IERC20 public immutable OLE;
     uint256 public vestDuration;
     address public signerAddress;
-    mapping(address user => mapping(uint256 epochId => bool vested)) public vestedRecord;
+    mapping(address user => mapping(uint256 airdropId => bool vested)) public vestedRecord;
     mapping(address user => mapping(bytes32 vestId => Reward reward)) public rewards;
 
     constructor(IERC20 _oleToken, address _signerAddress, uint256 _vestDuration) {
@@ -45,18 +45,18 @@ contract RewardDistributor is BlastAdapter {
         vestDuration = _vestDuration;
     }
 
-    function vests(uint256[] calldata _epochIds, uint256 amount, bytes memory signature) external {
-        uint256 epochLength = _epochIds.length;
-        if (epochLength == 0) revert InvalidParams();
-        // check the epoch was vested
-        for (uint256 i = 0; i < epochLength; i++) {
-            if (vestedRecord[_msgSender()][_epochIds[i]]) revert AlreadyVested();
-            vestedRecord[_msgSender()][_epochIds[i]] = true;
+    function vests(uint256[] calldata _airdropIds, uint256 amount, bytes memory signature) external {
+        uint256 airdropLength = _airdropIds.length;
+        if (airdropLength == 0) revert InvalidParams();
+        // check the airdrop was vested
+        for (uint256 i = 0; i < airdropLength; i++) {
+            if (vestedRecord[_msgSender()][_airdropIds[i]]) revert AlreadyVested();
+            vestedRecord[_msgSender()][_airdropIds[i]] = true;
         }
         // check the signature
         bytes memory data = abi.encodePacked(_msgSender(), amount);
-        for (uint256 i = 0; i < epochLength; i++) {
-            data = abi.encodePacked(data, _epochIds[i]);
+        for (uint256 i = 0; i < airdropLength; i++) {
+            data = abi.encodePacked(data, _airdropIds[i]);
         }
         bytes32 vestId = keccak256(data);
         if (signerAddress != SignatureLib.recoverSigner(SignatureLib.prefixed(vestId), signature)) revert InvalidSignature();
@@ -83,6 +83,10 @@ contract RewardDistributor is BlastAdapter {
         if (newVestDuration == 0) revert InvalidDuration();
         vestDuration = newVestDuration;
         emit VestDurationChanged(newVestDuration);
+    }
+
+    function recycle(address to, uint256 amount) external onlyOwner {
+        OLE.transferOut(to, amount);
     }
 
     function getWithdrawable(bytes32[] calldata vestIds, address user) external view returns (uint256 total) {
