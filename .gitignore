@@ -8,3 +8,4 @@
 coverage.json
 /scripts/
 /package-lock.json
+/contracts/helper/
