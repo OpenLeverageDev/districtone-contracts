@@ -159,9 +159,9 @@ describe("LinkUp Contract", function() {
 
 
       // Define the expected fee distribution based on your contract logic for this scenario
-      const expectedDirectInviterFee = ethers.parseEther("62.500000000000000000"); // Adjust the value based on your contract
-      const expectedSecondTierInviterFee = ethers.parseEther("37.500000000000000000"); // Adjust the value based on your contract
-      const expectedProtocolFee = ethers.parseEther("0.0003"); // Adjust the value based on your contract
+      const expectedDirectInviterFee = ethers.parseEther("55.555555555555555555"); // Adjust the value based on your contract
+      const expectedSecondTierInviterFee = ethers.parseEther("44.444444444444444445"); // Adjust the value based on your contract
+      const expectedProtocolFee = ethers.parseEther("0.00015"); // Adjust the value based on your contract
 
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)
@@ -193,8 +193,8 @@ describe("LinkUp Contract", function() {
 
 
       // Define the expected fee distribution based on your contract logic for this scenario
-      const expectedDirectInviterFee = ethers.parseEther("75"); // Adjust the value based on your contract
-      const expectedSecondTierInviterFee = ethers.parseEther("25"); // Adjust the value based on your contract
+      const expectedDirectInviterFee = ethers.parseEther("70"); // Adjust the value based on your contract
+      const expectedSecondTierInviterFee = ethers.parseEther("30"); // Adjust the value based on your contract
       const expectedProtocolFee = ethers.parseEther("0"); // Adjust the value based on your contract
 
       // Validate the Joined event with the expected fee distribution
@@ -288,12 +288,13 @@ describe("LinkUp Contract", function() {
     it("Should fail if sender is not owner", async function() {
       await expect(linkUp.connect(addr1).withdrawProtocolFee(addr2))
         .to.be.revertedWithCustomError(linkUp, "OwnableUnauthorizedAccount");
-
     });
 
     it("Should fail if sender is not owner", async function() {
       await expect(linkUp.connect(addr1).setMinSoleBalance(1))
         .to.be.revertedWithCustomError(linkUp, "OwnableUnauthorizedAccount");
+      await linkUp.setMinSoleBalance(1);
+      expect(await linkUp.minSoleBalance()).to.equal(1);
     });
   });
 

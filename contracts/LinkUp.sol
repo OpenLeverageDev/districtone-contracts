@@ -70,8 +70,8 @@ contract LinkUp is BlastAdapter {
 
         // Calculate fee distribution percent
         if (directInviterOwnsSOLE && secondTierInviterOwnsSOLE) {
-            directInviterFeePercent = 75;
-            secondTierInviterFeePercent = 25;
+            directInviterFeePercent = 70;
+            secondTierInviterFeePercent = 30;
             protocolFeePercent = 0;
         } else if (directInviterOwnsSOLE) {
             directInviterFeePercent = 80;
@@ -79,8 +79,8 @@ contract LinkUp is BlastAdapter {
             protocolFeePercent = 10;
         } else if (secondTierInviterOwnsSOLE) {
             directInviterFeePercent = 50;
-            secondTierInviterFeePercent = 30;
-            protocolFeePercent = 20;
+            secondTierInviterFeePercent = 40;
+            protocolFeePercent = 10;
         } else {
             directInviterFeePercent = 60;
             secondTierInviterFeePercent = 20;
