@@ -70,6 +70,13 @@ contract("SpaceShare.sol", function(accounts) {
       expect(await shareCtr.getRewards([spaceId], owner)).to.bignumber.eq(reward);
     });
 
+    it("seller reward is not 0 after sell 1 share 2 times", async () => {
+      await shareCtr.buyShares(spaceId, new BN(2), await shareCtr.getBuyPriceWithFees(spaceId, 2), signTimeStamp, sign, { from: trader });
+      await shareCtr.sellShares(spaceId, new BN(1), minOutAmount, { from: trader });
+      await shareCtr.sellShares(spaceId, new BN(1), minOutAmount, { from: trader });
+      expect(await shareCtr.getRewards([spaceId], trader)).to.bignumber.eq(price2.mul(holderFee).div(new BN(100)).divn(2));
+    });
+
     it("seller and holders reward increases after sell 1 share and hold 1 share", async () => {
       await shareCtr.buyShares(spaceId, new BN(2), await shareCtr.getBuyPriceWithFees(spaceId, 2), signTimeStamp, sign, { from: trader });
       let buyReward = price1.add(price2).mul(holderFee).div(new BN(100));

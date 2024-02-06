@@ -208,6 +208,7 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
         (uint256 protocolFee, uint256 holderFee) = _getFees(price);
         outAmount = price - protocolFee - holderFee;
         if (outAmount < minOutAmount) revert InsufficientOutAmount();
+        _updateHolderReward(spaceId, trader);
         uint256 totalSupply;
         unchecked {
             sharesBalance[spaceId][trader] -= shares;
