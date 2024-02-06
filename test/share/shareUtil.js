@@ -23,10 +23,9 @@ let B = toBN(web3.utils.toWei("100", "ether"));
 let price1 = K.add(B);
 let price2 = toBN(2).mul(K).add(B);
 let price3 = toBN(3).mul(K).add(B);
-let FEE_DENOMINATOR = toBN(10000);
 
 const newSpaceShare = async (owner) => {
-  return await SpaceShare.new(ZERO_ADDRESS, ZERO_ADDRESS, 0, 0, 0, { from: owner });
+  return await SpaceShare.new(ZERO_ADDRESS, owner, 0, 0, 0, { from: owner });
 };
 
 const newOLE = async (owner) => {
@@ -66,7 +65,6 @@ module.exports = {
   zeroAmountError,
   spaceNotExistsError,
   insufficientInAmountError,
-  FEE_DENOMINATOR,
   notSellLastShareError,
   insufficientOutAmountError,
   insufficientSharesError,

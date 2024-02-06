@@ -29,8 +29,6 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
     uint256 public immutable K; // Slope of the pricing curve.
     uint256 public immutable B; // Y-intercept of the pricing curve.
 
-    // Constants and variables for fee management.
-    uint16 private constant FEE_DENOMINATOR = 10000; // Denominator for calculating fee percentages.
     IERC20 public immutable OLE; // The OLE token used for transactions.
     address public protocolFeeDestination; // Address where protocol fees are sent.
     uint16 public protocolFeePercent; // Protocol fee percentage (e.g., 500 for 5%).
@@ -58,6 +56,7 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
      */
     constructor(IERC20 _ole, address _signIssuerAddress, uint256 _signValidDuration, uint256 _k, uint256 _b) {
         OLE = _ole;
+        if (_signIssuerAddress == address(0)) revert ZeroAddress();
         signIssuerAddress = _signIssuerAddress;
         signValidDuration = _signValidDuration;
         K = _k;
@@ -115,7 +114,7 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
         uint256 reward;
         uint len = spaceIds.length;
         for (uint i = 0; i < len; i++) {
-            reward = _withdrawReward(spaceIds[i]);
+            reward += _withdrawReward(spaceIds[i]);
         }
         OLE.transferOut(_msgSender(), reward);
     }
@@ -142,13 +141,15 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
     function setProtocolFeeDestination(address _protocolFeeDestination) external override onlyOwner {
         if (_protocolFeeDestination == address(0)) revert ZeroAddress();
         protocolFeeDestination = _protocolFeeDestination;
+        emit ProtocolFeeDestinationChanged(_protocolFeeDestination);
     }
 
     function setFees(uint16 _protocolFeePercent, uint16 _holderFeePercent) external override onlyOwner {
         // the total fee percent must le 50%
-        if (_protocolFeePercent + _holderFeePercent > (FEE_DENOMINATOR / 2)) revert InvalidParam();
+        if (_protocolFeePercent + _holderFeePercent > 50) revert InvalidParam();
         protocolFeePercent = _protocolFeePercent;
         holderFeePercent = _holderFeePercent;
+        emit FeesChanged(_protocolFeePercent, _holderFeePercent);
     }
 
     function setSignConf(address _signIssuerAddress, uint256 _signValidDuration) external override onlyOwner {
@@ -156,6 +157,7 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
         if (_signValidDuration == 0) revert InvalidParam();
         signIssuerAddress = _signIssuerAddress;
         signValidDuration = _signValidDuration;
+        emit SignConfChanged(_signIssuerAddress, _signValidDuration);
     }
 
     function getBuyPrice(uint256 spaceId, uint256 amount) external view override returns (uint256) {
@@ -227,14 +229,14 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
     }
 
     function _getPrice(uint256 supply, uint256 amount, uint256 k, uint256 b) internal pure returns (uint256) {
-        uint256 sum1 = supply == 0 ? 0 : ((supply - 1) * ((k + b) + (supply - 1) * k + b)) / 2;
-        uint256 sum2 = supply == 0 && amount == 1 ? 0 : ((supply - 1 + amount) * ((k + b) + (supply - 1 + amount) * k + b)) / 2;
+        uint256 sum1 = supply == 0 ? 0 : (((k + b) + (supply - 1) * k + b) * (supply - 1)) / 2;
+        uint256 sum2 = supply == 0 && amount == 1 ? 0 : (((k + b) + (supply + amount - 1) * k + b) * (supply + amount - 1)) / 2;
         return sum2 - sum1;
     }
 
     function _getFees(uint256 price) internal view returns (uint256 protocolFee, uint256 holderFee) {
-        protocolFee = (price * protocolFeePercent) / FEE_DENOMINATOR;
-        holderFee = (price * holderFeePercent) / FEE_DENOMINATOR;
+        protocolFee = (price * protocolFeePercent) / 100;
+        holderFee = (price * holderFeePercent) / 100;
     }
 
     function _collectFees(uint256 protocolFee) internal {
@@ -244,10 +246,9 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
     }
 
     function _updateSharesReward(uint256 spaceId, uint256 newReward, address holder) internal {
-        if (newReward == 0) {
-            return;
+        if (newReward > 0) {
+            rewardPerShareStored[spaceId] += (newReward * (1 ether)) / sharesSupply[spaceId];
         }
-        rewardPerShareStored[spaceId] += (newReward * (1 ether)) / sharesSupply[spaceId];
         _updateHolderReward(spaceId, holder);
     }
 

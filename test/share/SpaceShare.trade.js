@@ -1,7 +1,7 @@
 const {
   newOLE,
   newSpaceWithOle, price1, price2, zeroAmountError, spaceNotExistsError,
-  insufficientInAmountError, FEE_DENOMINATOR, notSellLastShareError,
+  insufficientInAmountError, notSellLastShareError,
   insufficientOutAmountError, insufficientSharesError, price3, arithmeticError, getSign, clearOleBalance
 } = require("./shareUtil");
 const { expectEvent, BN, expectRevert } = require("@openzeppelin/test-helpers");
@@ -22,8 +22,8 @@ contract("SpaceShare.sol", function(accounts) {
   let notExistSpaceId = spaceId.addn(2);
   let maxInAmount = web3.utils.toWei("10000");
   let minOutAmount = web3.utils.toWei("0");
-  let protocolFee = new BN(100);
-  let holderFee = new BN(500);
+  let protocolFee = new BN(1);
+  let holderFee = new BN(5);
 
   let issuer;
   let sign1;
@@ -112,7 +112,7 @@ contract("SpaceShare.sol", function(accounts) {
       await shareCtr.setFees(protocolFee, holderFee, { from: owner });
       await shareCtr.setProtocolFeeDestination(treasury, { from: owner });
       await shareCtr.buyShares(spaceId, new BN(1), await shareCtr.getBuyPriceWithFees(spaceId, 1), signTimeStamp1, sign1, { from: acc1 });
-      expect(await oleCtr.balanceOf(treasury)).to.bignumber.eq(protocolFee.mul(price1).divn(FEE_DENOMINATOR));
+      expect(await oleCtr.balanceOf(treasury)).to.bignumber.eq(protocolFee.mul(price1).divn(100));
     });
 
     it("fails if input share amount is 0 ", async () => {
@@ -151,8 +151,8 @@ contract("SpaceShare.sol", function(accounts) {
       let txReceipt = await shareCtr.sellShares(spaceId, new BN(1), minOutAmount, { from: acc1 });
       expectEvent(txReceipt, "Trade", {
         spaceId: spaceId, trader: acc1, isBuy: false, shares: new BN(1), price: price2,
-        protocolFee: protocolFee.mul(price2).divn(FEE_DENOMINATOR),
-        holderFee: holderFee.mul(price2).divn(FEE_DENOMINATOR),
+        protocolFee: protocolFee.mul(price2).divn( new BN(100)),
+        holderFee: holderFee.mul(price2).divn( new BN(100)),
         supply: new BN(2)
       });
     });
@@ -162,8 +162,8 @@ contract("SpaceShare.sol", function(accounts) {
       await shareCtr.sellShares(spaceId, new BN(1), minOutAmount, { from: acc1 });
       expect(await shareCtr.sharesSupply(spaceId)).to.bignumber.eq(new BN(2));
       expect(await shareCtr.sharesBalance(spaceId, acc1)).to.bignumber.eq(new BN(1));
-      expect(await oleCtr.balanceOf(acc1)).to.bignumber.eq(price2.mul(FEE_DENOMINATOR.sub(protocolFee).sub(holderFee))
-        .div(FEE_DENOMINATOR));
+      expect(await oleCtr.balanceOf(acc1)).to.bignumber.eq(price2.mul( new BN(100).sub(protocolFee).sub(holderFee))
+        .div( new BN(100)));
     });
 
     it("account balance change after sell 2 share", async () => {
@@ -180,7 +180,7 @@ contract("SpaceShare.sol", function(accounts) {
     it("sell shares will collect fee", async () => {
       let preBalance = new BN(await oleCtr.balanceOf(treasury));
       await shareCtr.sellShares(spaceId, new BN(1), minOutAmount, { from: acc1 });
-      expect(new BN(await oleCtr.balanceOf(treasury)).sub(preBalance)).to.bignumber.eq(protocolFee.mul(price2).divn(FEE_DENOMINATOR));
+      expect(new BN(await oleCtr.balanceOf(treasury)).sub(preBalance)).to.bignumber.eq(protocolFee.mul(price2).divn( new BN(100)));
     });
 
     it("sell shares with holder fee is 0", async () => {
@@ -203,8 +203,8 @@ contract("SpaceShare.sol", function(accounts) {
     });
 
     it("fails if returns lt min out amount", async () => {
-      let min = price2.mul(FEE_DENOMINATOR.sub(protocolFee).sub(holderFee))
-        .div(FEE_DENOMINATOR).addn(1);
+      let min = price2.mul( new BN(100).sub(protocolFee).sub(holderFee))
+        .div( new BN(100)).addn(1);
       await expectRevert(
         shareCtr.sellShares(spaceId, new BN(1), min, { from: acc1 }),
         insufficientOutAmountError
@@ -251,17 +251,26 @@ contract("SpaceShare.sol", function(accounts) {
       expect(await shareCtr.getBuyPrice(spaceId, 2)).to.bignumber.eq(price2.add(price3));
     });
 
-    it("fails if get buy price from 0 to 2", async () => {
-      await expectRevert(
-        shareCtr.getBuyPrice(notExistSpaceId, 2),
-        arithmeticError
-      );
+    it("get buy price from 0 to 2", async () => {
+      expect(await shareCtr.getBuyPrice(notExistSpaceId, 2)).to.bignumber.eq(price1);
+    });
+
+    it("get buy price from 0 to 3", async () => {
+      expect(await shareCtr.getBuyPrice(notExistSpaceId, 3)).to.bignumber.eq(price1.add(price2));
+    });
+
+    it("get buy price from 0 to 4", async () => {
+      expect(await shareCtr.getBuyPrice(notExistSpaceId, 4)).to.bignumber.eq(price1.add(price2).add(price3));
     });
 
     it("get sell price from 2 to 1", async () => {
       await shareCtr.buyShares(spaceId, new BN(1), maxInAmount, signTimeStamp1, sign1, { from: acc1 });
       expect(await shareCtr.getSellPrice(spaceId, 1)).to.bignumber.eq(price1);
+    });
 
+    it("get sell price from 2 to 0", async () => {
+      await shareCtr.buyShares(spaceId, new BN(1), maxInAmount, signTimeStamp1, sign1, { from: acc1 });
+      expect(await shareCtr.getSellPrice(spaceId, 2)).to.bignumber.eq(price1);
     });
 
     it("get sell price from 4 to 2", async () => {
@@ -280,7 +289,7 @@ contract("SpaceShare.sol", function(accounts) {
     it("get sell price with fees", async () => {
       await shareCtr.buyShares(spaceId, new BN(1), maxInAmount, signTimeStamp1, sign1, { from: acc1 });
       expect(await shareCtr.getSellPriceWithFees(spaceId, 1)).to.bignumber.eq(
-        price1.mul(FEE_DENOMINATOR.sub(protocolFee).sub(holderFee)).div(FEE_DENOMINATOR));
+        price1.mul(new BN(100).sub(protocolFee).sub(holderFee)).div(new BN(100)));
     });
 
   });

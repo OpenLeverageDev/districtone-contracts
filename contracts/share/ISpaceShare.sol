@@ -8,6 +8,12 @@ interface ISpaceShare {
 
     event WithdrawReward(address holder, uint256 spaceId, uint256 reward);
 
+    event ProtocolFeeDestinationChanged(address newProtocolFeeDestination);
+
+    event FeesChanged(uint256 newProtocolFeePercent, uint256 newHolderFeePercent);
+
+    event SignConfChanged(address newIssuerAddress, uint256 newSignValidDuration);
+
     function createSpace() external;
 
     function buyShares(uint256 spaceId, uint256 shares, uint256 maxInAmount, uint256 timestamp, bytes memory signature) external;
