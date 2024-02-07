@@ -247,7 +247,7 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
     }
 
     function _updateSharesReward(uint256 spaceId, uint256 newReward, address holder) internal {
-        if (newReward > 0) {
+        if (newReward > 0 && sharesSupply[spaceId] > 0) {
             rewardPerShareStored[spaceId] += (newReward * (1 ether)) / sharesSupply[spaceId];
         }
         _updateHolderReward(spaceId, holder);
