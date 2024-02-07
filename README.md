@@ -21,7 +21,8 @@ The OPZap contract provides functionality for users to easily swap assets with O
 RewardDistributor.sol This contract is designed to distribute rewards in a linear fashion over a specified vesting duration.
 
 ## Audits
-To be updated.
+- [ThreeSigma Labs](https://github.com/OpenLeverageDev/districtone-contracts/blob/main/audits/ThreeSigma-Audit-Report-DistrictOne.pdf)
+- [PeckShield](https://github.com/OpenLeverageDev/districtone-contracts/blob/main/audits/PeckShield-Audit-Report-DistrictOne.pdf)
 
 ## Build & Tests
 
