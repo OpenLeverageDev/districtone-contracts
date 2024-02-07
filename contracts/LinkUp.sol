@@ -47,7 +47,7 @@ contract LinkUp is BlastAdapter {
         ZAP = _zap;
     }
 
-    function join(address inviter, bytes memory signature) external payable {
+    function join(address inviter, bytes memory signature, uint256 minBoughtOle) external payable {
         if (msg.value != joinFee) revert IncorrectFee();
         if (inviterOf[msg.sender] != address(0)) revert AlreadyJoined();
         if (inviter == address(0) || inviter == msg.sender) revert InvalidInviter();
@@ -94,9 +94,7 @@ contract LinkUp is BlastAdapter {
         uint256 _protocolFee = (joinFee * protocolFeePercent) / 100;
         protocolFee += _protocolFee;
         // Buy ole
-        uint256 preOleBalance = OLE.balanceOfThis();
-        ZAP.swapETHForOLE{value: joinFee - _protocolFee}();
-        uint256 boughtOle = OLE.balanceOfThis() - preOleBalance;
+        uint256 boughtOle = ZAP.swapETHForOLE{value: joinFee - _protocolFee}(minBoughtOle);
         // Distribute fees
         uint256 directInviterFee = (boughtOle * directInviterFeePercent) / (directInviterFeePercent + secondTierInviterFeePercent);
         uint256 secondTierInviterFee = boughtOle - directInviterFee;

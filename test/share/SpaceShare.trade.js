@@ -115,6 +115,11 @@ contract("SpaceShare.sol", function(accounts) {
       expect(await oleCtr.balanceOf(treasury)).to.bignumber.eq(protocolFee.mul(price1).divn(100));
     });
 
+    it("buy shares to other", async () => {
+      await shareCtr.buySharesTo(spaceId, new BN(1), price1, signTimeStamp2, sign2, acc2, { from: acc1 });
+      expect(await shareCtr.sharesBalance(spaceId, acc2)).to.bignumber.eq(new BN(1));
+    });
+
     it("fails if input share amount is 0 ", async () => {
       await expectRevert(
         shareCtr.buyShares(spaceId, new BN(0), price1, signTimeStamp1, sign1, { from: acc1 }),
@@ -151,8 +156,8 @@ contract("SpaceShare.sol", function(accounts) {
       let txReceipt = await shareCtr.sellShares(spaceId, new BN(1), minOutAmount, { from: acc1 });
       expectEvent(txReceipt, "Trade", {
         spaceId: spaceId, trader: acc1, isBuy: false, shares: new BN(1), price: price2,
-        protocolFee: protocolFee.mul(price2).divn( new BN(100)),
-        holderFee: holderFee.mul(price2).divn( new BN(100)),
+        protocolFee: protocolFee.mul(price2).divn(new BN(100)),
+        holderFee: holderFee.mul(price2).divn(new BN(100)),
         supply: new BN(2)
       });
     });
@@ -162,8 +167,8 @@ contract("SpaceShare.sol", function(accounts) {
       await shareCtr.sellShares(spaceId, new BN(1), minOutAmount, { from: acc1 });
       expect(await shareCtr.sharesSupply(spaceId)).to.bignumber.eq(new BN(2));
       expect(await shareCtr.sharesBalance(spaceId, acc1)).to.bignumber.eq(new BN(1));
-      expect(await oleCtr.balanceOf(acc1)).to.bignumber.eq(price2.mul( new BN(100).sub(protocolFee).sub(holderFee))
-        .div( new BN(100)));
+      expect(await oleCtr.balanceOf(acc1)).to.bignumber.eq(price2.mul(new BN(100).sub(protocolFee).sub(holderFee))
+        .div(new BN(100)));
     });
 
     it("account balance change after sell 2 share", async () => {
@@ -180,7 +185,7 @@ contract("SpaceShare.sol", function(accounts) {
     it("sell shares will collect fee", async () => {
       let preBalance = new BN(await oleCtr.balanceOf(treasury));
       await shareCtr.sellShares(spaceId, new BN(1), minOutAmount, { from: acc1 });
-      expect(new BN(await oleCtr.balanceOf(treasury)).sub(preBalance)).to.bignumber.eq(protocolFee.mul(price2).divn( new BN(100)));
+      expect(new BN(await oleCtr.balanceOf(treasury)).sub(preBalance)).to.bignumber.eq(protocolFee.mul(price2).divn(new BN(100)));
     });
 
     it("sell shares with holder fee is 0", async () => {
@@ -203,8 +208,8 @@ contract("SpaceShare.sol", function(accounts) {
     });
 
     it("fails if returns lt min out amount", async () => {
-      let min = price2.mul( new BN(100).sub(protocolFee).sub(holderFee))
-        .div( new BN(100)).addn(1);
+      let min = price2.mul(new BN(100).sub(protocolFee).sub(holderFee))
+        .div(new BN(100)).addn(1);
       await expectRevert(
         shareCtr.sellShares(spaceId, new BN(1), min, { from: acc1 }),
         insufficientOutAmountError
@@ -225,7 +230,26 @@ contract("SpaceShare.sol", function(accounts) {
         notSellLastShareError
       );
     });
+  });
 
+  describe("exit space", function() {
+    let acc1InitShares = new BN(2);
+    beforeEach(async () => {
+      await shareCtr.createSpace({ from: owner });
+      await shareCtr.setFees(protocolFee, holderFee, { from: owner });
+      await shareCtr.setProtocolFeeDestination(treasury, { from: owner });
+      await oleCtr.approve(shareCtr.address, maxInAmount);
+      await shareCtr.buyShares(spaceId, acc1InitShares, maxInAmount, signTimeStamp1, sign1, { from: acc1 });
+    });
+
+    it("exit success", async () => {
+      let oleBySell = new BN(await shareCtr.getSellPriceWithFees(spaceId, 1));
+      let oleByReward = new BN(await shareCtr.getRewards([spaceId], owner));
+      let oleByExit = oleBySell.add(oleByReward);
+      let preOleBalance = new BN(await oleCtr.balanceOf(owner));
+      await shareCtr.exitSpace(spaceId, 0);
+      expect(await oleCtr.balanceOf(owner)).to.bignumber.eq(preOleBalance.add(oleByExit));
+    });
 
   });
 

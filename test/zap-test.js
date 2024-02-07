@@ -24,7 +24,7 @@ describe("Zap Contract", function() {
     soleCtr = await (await ethers.getContractFactory("MockSOLE")).deploy(oleEthCtr);
     spaceShareCtr = await (await ethers.getContractFactory("MockSpaceShare")).deploy(oleCtr, K, B);
     zapCtr = await (await ethers.getContractFactory("OPZap")).deploy(oleCtr, wethCtr,
-      oleEthCtr, DEX_FEES,  soleCtr,  spaceShareCtr);
+      oleEthCtr, DEX_FEES, soleCtr, spaceShareCtr);
     [deployer, acc1, ...addrs] = await ethers.getSigners();
     ts = (await ethers.provider.getBlock("latest")).timestamp;
   });
@@ -42,19 +42,25 @@ describe("Zap Contract", function() {
 
   describe("swap eth for ole", function() {
     it("swap 0.1eth for ole ", async function() {
-      let tx = await zapCtr.swapETHForOLE({ value: ethers.parseEther("0.1") });
+      let tx = await zapCtr.swapETHForOLE(0, { value: ethers.parseEther("0.1") });
       await expect(tx)
         .to.emit(oleCtr, "Transfer")
         .withArgs(
           await oleEthCtr.getAddress(),
-          deployer.address,
+          deployer,
           ethers.parseEther("9070.243237099340759263")
         );
     });
     it("swap 0.2eth for ole ", async function() {
-      await zapCtr.connect(acc1).swapETHForOLE({ value: ethers.parseEther("0.2") });
+      await zapCtr.connect(acc1).swapETHForOLE(0, { value: ethers.parseEther("0.2") });
       expect(await oleCtr.balanceOf(acc1)).to.equal(ethers.parseEther("16631.929970821175489787"));
     });
+
+    it("fail if bought ole lt min", async function() {
+      await expect(zapCtr.swapETHForOLE(ethers.parseEther("9071"), { value: ethers.parseEther("0.1") }))
+        .to.revertedWithCustomError(zapCtr, "InsufficientOleReturn");
+    });
+
   });
 
   describe("create sole by eth", function() {
@@ -113,23 +119,29 @@ describe("Zap Contract", function() {
     });
 
     it("fails if for insufficient eth", async function() {
-      await expect(zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00",
+      await expect(zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00", 0,
         { value: ethers.parseEther("0.00001") }))
         .to.revertedWithCustomError(spaceShareCtr, "InsufficientInAmount");
     });
 
     it("buy shares for 0.01eth", async function() {
-      await zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00",
+      await zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00", 0,
         { value: ethers.parseEther("0.01") });
       expect(await spaceShareCtr.sharesBalance(spaceId, acc1)).to.equal(10);
       expect(await oleCtr.balanceOf(acc1)).to.equal(ethers.parseEther("882.148209114086982351"));
     });
 
     it("buy shares for 0.1eth", async function() {
-      await zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00",
+      await zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00", 0,
         { value: ethers.parseEther("0.1") });
       expect(await spaceShareCtr.sharesBalance(spaceId, acc1)).to.equal(10);
       expect(await oleCtr.balanceOf(acc1)).to.equal(ethers.parseEther("8964.743237099340759263"));
+    });
+
+    it("fail if bought ole lt min", async function() {
+      await expect(zapCtr.connect(acc1).buySharesByETH(spaceId, 10, 0, "0x00", ethers.parseEther("9071"),
+        { value: ethers.parseEther("0.1") }))
+        .to.revertedWithCustomError(zapCtr, "InsufficientOleReturn");
     });
   });
 });

@@ -56,16 +56,13 @@ describe("LinkUp Contract", function() {
       // Sign inviter address
       const inviter = addr2.address;
       let rawSig = signer.signMessage(hexStringToArray(ethers.keccak256(inviter)));
-      const joinTx = await linkUp.connect(addr1).join(inviter, rawSig, { value: ethers.parseEther("0.0015") });
+      const joinTx = await linkUp.connect(addr1).join(inviter, rawSig, 0, { value: ethers.parseEther("0.0015") });
 
       let invitee = addr1.address;
       // Correctly using ethers.utils.parseEther for fee values
       await expect(joinTx)
         .to.emit(linkUp, "Joined")
-        .withArgs(
-          invitee,
-          inviter,
-          ethers.parseEther("100"), // directInviterFee (example value)
+        .withArgs(invitee, inviter, ethers.parseEther("100"), // directInviterFee (example value)
           ethers.parseEther("0"),  // secondTierInviterFee (example value)
           ethers.parseEther("0.0006")  // protocolFee (example value)
         );
@@ -75,29 +72,29 @@ describe("LinkUp Contract", function() {
     it("Should fail if JOIN_FEE is not met", async function() {
       const inviter = addr2.address;
       let rawSig = signer.signMessage(hexStringToArray(ethers.keccak256(inviter)));
-      await expect(linkUp.connect(addr1).join(inviter, rawSig, { value: ethers.parseEther("0.001") }))
+      await expect(linkUp.connect(addr1).join(inviter, rawSig, 0, { value: ethers.parseEther("0.001") }))
         .to.be.revertedWithCustomError(linkUp, "IncorrectFee");
     });
 
     it("Should fail if the inviter is himself", async function() {
       const inviter = addr1.address;
       let rawSig = signer.signMessage(hexStringToArray(ethers.keccak256(inviter)));
-      await expect(linkUp.connect(addr1).join(inviter, rawSig, { value: ethers.parseEther("0.0015") }))
+      await expect(linkUp.connect(addr1).join(inviter, rawSig, 0, { value: ethers.parseEther("0.0015") }))
         .to.be.revertedWithCustomError(linkUp, "InvalidInviter");
     });
 
     it("Should fail if the inviter is zero address", async function() {
       const inviter = ethers.ZeroAddress;
       let rawSig = signer.signMessage(hexStringToArray(ethers.keccak256(inviter)));
-      await expect(linkUp.connect(addr1).join(inviter, rawSig, { value: ethers.parseEther("0.0015") }))
+      await expect(linkUp.connect(addr1).join(inviter, rawSig, 0, { value: ethers.parseEther("0.0015") }))
         .to.be.revertedWithCustomError(linkUp, "InvalidInviter");
     });
 
     it("Should fail if the user tries to join twice", async function() {
       const inviter = addr2.address;
       let signature = signer.signMessage(hexStringToArray(ethers.keccak256(inviter)));
-      await linkUp.connect(addr1).join(inviter, signature, { value: ethers.parseEther("0.0015") });
-      await expect(linkUp.connect(addr1).join(inviter, signature, { value: ethers.parseEther("0.0015") }))
+      await linkUp.connect(addr1).join(inviter, signature, 0, { value: ethers.parseEther("0.0015") });
+      await expect(linkUp.connect(addr1).join(inviter, signature, 0, { value: ethers.parseEther("0.0015") }))
         .to.be.revertedWithCustomError(linkUp, "AlreadyJoined");
     });
 
@@ -118,9 +115,9 @@ describe("LinkUp Contract", function() {
       const signatureForSecondTier = await signer.signMessage(hexStringToArray(ethers.keccak256(secondTierInviter)));
 
       // addr1 invites addr3
-      await linkUp.connect(addr1).join(secondTierInviter, signatureForSecondTier, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addr1).join(secondTierInviter, signatureForSecondTier, 0, { value: ethers.parseEther("0.0015") });
       // addr3 joins under addr1
-      const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, { value: ethers.parseEther("0.0015") });
+      const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, 0, { value: ethers.parseEther("0.0015") });
 
       // Define the expected fee distribution based on your contract logic
       const expectedDirectInviterFee = ethers.parseEther("88.888888888888888888"); // Replace with actual expected value
@@ -130,13 +127,7 @@ describe("LinkUp Contract", function() {
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)
         .to.emit(linkUp, "Joined")
-        .withArgs(
-          invitee,
-          inviter,
-          expectedDirectInviterFee,
-          expectedSecondTierInviterFee,
-          expectedProtocolFee
-        );
+        .withArgs(invitee, inviter, expectedDirectInviterFee, expectedSecondTierInviterFee, expectedProtocolFee);
     });
 
     it("Should distribute fees correctly when only the second-tier inviter owns sOLE", async function() {
@@ -153,9 +144,9 @@ describe("LinkUp Contract", function() {
       const signatureForSecondTier = await signer.signMessage(hexStringToArray(ethers.keccak256(secondTierInviter)));
 
       // addr1 invites addr3
-      await linkUp.connect(addr1).join(secondTierInviter, signatureForSecondTier, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addr1).join(secondTierInviter, signatureForSecondTier, 0, { value: ethers.parseEther("0.0015") });
       // addr3 joins under addr1
-      const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, { value: ethers.parseEther("0.0015") });
+      const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, 0, { value: ethers.parseEther("0.0015") });
 
 
       // Define the expected fee distribution based on your contract logic for this scenario
@@ -166,13 +157,7 @@ describe("LinkUp Contract", function() {
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)
         .to.emit(linkUp, "Joined")
-        .withArgs(
-          invitee,
-          inviter,
-          expectedDirectInviterFee,
-          expectedSecondTierInviterFee,
-          expectedProtocolFee
-        );
+        .withArgs(invitee, inviter, expectedDirectInviterFee, expectedSecondTierInviterFee, expectedProtocolFee);
     });
 
     it("Should distribute fees correctly when both inviters own sOLE", async function() {
@@ -187,9 +172,9 @@ describe("LinkUp Contract", function() {
       const signatureForSecondTier = await signer.signMessage(hexStringToArray(ethers.keccak256(secondTierInviter)));
 
       // addr1 invites addr3
-      await linkUp.connect(addr1).join(secondTierInviter, signatureForSecondTier, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addr1).join(secondTierInviter, signatureForSecondTier, 0, { value: ethers.parseEther("0.0015") });
       // addr3 joins under addr1
-      const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, { value: ethers.parseEther("0.0015") });
+      const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, 0, { value: ethers.parseEther("0.0015") });
 
 
       // Define the expected fee distribution based on your contract logic for this scenario
@@ -200,13 +185,7 @@ describe("LinkUp Contract", function() {
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)
         .to.emit(linkUp, "Joined")
-        .withArgs(
-          invitee,
-          inviter,
-          expectedDirectInviterFee,
-          expectedSecondTierInviterFee,
-          expectedProtocolFee
-        );
+        .withArgs(invitee, inviter, expectedDirectInviterFee, expectedSecondTierInviterFee, expectedProtocolFee);
     });
 
     it("Should distribute fees correctly when neither inviter owns sOLE", async function() {
@@ -222,9 +201,9 @@ describe("LinkUp Contract", function() {
       const signatureForSecondTier = await signer.signMessage(hexStringToArray(ethers.keccak256(secondTierInviter)));
 
       // addr1 invites addr3
-      await linkUp.connect(addr1).join(secondTierInviter, signatureForSecondTier, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addr1).join(secondTierInviter, signatureForSecondTier, 0, { value: ethers.parseEther("0.0015") });
       // addr3 joins under addr1
-      const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, { value: ethers.parseEther("0.0015") });
+      const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, 0, { value: ethers.parseEther("0.0015") });
 
       // Define the expected fee distribution based on your contract logic for this scenario
       const expectedDirectInviterFee = ethers.parseEther("75"); // Adjust the value based on your contract
@@ -234,13 +213,7 @@ describe("LinkUp Contract", function() {
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)
         .to.emit(linkUp, "Joined")
-        .withArgs(
-          invitee,
-          inviter,
-          expectedDirectInviterFee,
-          expectedSecondTierInviterFee,
-          expectedProtocolFee
-        );
+        .withArgs(invitee, inviter, expectedDirectInviterFee, expectedSecondTierInviterFee, expectedProtocolFee);
     });
 
   });
@@ -250,8 +223,8 @@ describe("LinkUp Contract", function() {
       // Setup: addr1 joins under addr2, then addr3 joins under addr1
       const signature1 = await signer.signMessage(hexStringToArray(ethers.keccak256(addr1.address)));
       const signature2 = await signer.signMessage(hexStringToArray(ethers.keccak256(addr2.address)));
-      await linkUp.connect(addr1).join(addr2.address, signature2, { value: ethers.parseEther("0.0015") });
-      await linkUp.connect(addrs[3]).join(addr1.address, signature1, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addr1).join(addr2.address, signature2, 0, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addrs[3]).join(addr1.address, signature1, 0, { value: ethers.parseEther("0.0015") });
 
       // Withdraw balance
       const initialBalance = await oleCtr.balanceOf(addr1.address);
@@ -273,8 +246,8 @@ describe("LinkUp Contract", function() {
       // Setup: addr1 joins under addr2, then addr3 joins under addr1
       const signature1 = await signer.signMessage(hexStringToArray(ethers.keccak256(addr1.address)));
       const signature2 = await signer.signMessage(hexStringToArray(ethers.keccak256(addr2.address)));
-      await linkUp.connect(addr1).join(addr2.address, signature2, { value: ethers.parseEther("0.0015") });
-      await linkUp.connect(addrs[3]).join(addr1.address, signature1, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addr1).join(addr2.address, signature2, 0, { value: ethers.parseEther("0.0015") });
+      await linkUp.connect(addrs[3]).join(addr1.address, signature1, 0, { value: ethers.parseEther("0.0015") });
 
       // Withdraw balance
       const initialBalance = await ethers.provider.getBalance(addr1.address);

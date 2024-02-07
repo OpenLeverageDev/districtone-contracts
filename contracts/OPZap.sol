@@ -16,6 +16,7 @@ import {BlastAdapter} from "./BlastAdapter.sol";
  */
 contract OPZap is BlastAdapter {
     error InsufficientLpReturn(); // Error thrown when the LP amount received is less than expected
+    error InsufficientOleReturn(); // Error thrown when the OLE amount received is less than expected
 
     using Erc20Utils for IERC20;
     using Erc20Utils for IUniV2ClassPair;
@@ -35,9 +36,11 @@ contract OPZap is BlastAdapter {
         SPACE = _spaceShare;
     }
 
-    function swapETHForOLE() external payable {
+    function swapETHForOLE(uint256 minBoughtOle) external payable returns (uint256 boughtOle) {
         WETH.deposit{value: msg.value}();
-        _swapETHForOLE(msg.value, msg.sender);
+        boughtOle = _swapETHForOLE(msg.value, _msgSender());
+        if (boughtOle < minBoughtOle) revert InsufficientOleReturn();
+        return boughtOle;
     }
 
     function createXoleByETH(uint256 minLpReturn, uint256 unlockTime) external payable {
@@ -56,10 +59,11 @@ contract OPZap is BlastAdapter {
         ISOLE(SOLE).increase_amount_for(msg.sender, lpReturn);
     }
 
-    function buySharesByETH(uint256 spaceId, uint256 shares, uint256 timestamp, bytes memory signature) external payable {
+    function buySharesByETH(uint256 spaceId, uint256 shares, uint256 timestamp, bytes memory signature, uint256 minBoughtOle) external payable {
         WETH.deposit{value: msg.value}();
         _swapETHForOLE(msg.value, address(this));
         uint256 boughtOle = OLE.balanceOfThis();
+        if (boughtOle < minBoughtOle) revert InsufficientOleReturn();
         OLE.safeApprove(address(SPACE), boughtOle);
         SPACE.buySharesTo(spaceId, shares, boughtOle, timestamp, signature, msg.sender);
         // refund ole
@@ -69,13 +73,15 @@ contract OPZap is BlastAdapter {
         }
     }
 
-    function _swapETHForOLE(uint256 ethAmount, address to) internal {
+    function _swapETHForOLE(uint256 ethAmount, address to) internal returns (uint256 boughtOleAmount) {
         (uint256 reserve0, uint256 reserve1, ) = OLE_ETH.getReserves();
         IERC20(address(WETH)).transferOut(address(OLE_ETH), ethAmount);
         if (oleIsToken0()) {
-            OLE_ETH.swap(getAmountOut(ethAmount, reserve1, reserve0), 0, to, "");
+            boughtOleAmount = getAmountOut(ethAmount, reserve1, reserve0);
+            OLE_ETH.swap(boughtOleAmount, 0, to, "");
         } else {
-            OLE_ETH.swap(0, getAmountOut(ethAmount, reserve0, reserve1), to, "");
+            boughtOleAmount = getAmountOut(ethAmount, reserve0, reserve1);
+            OLE_ETH.swap(0, boughtOleAmount, to, "");
         }
     }
 
