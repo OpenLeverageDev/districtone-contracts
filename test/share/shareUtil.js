@@ -35,10 +35,10 @@ const newSpaceShareWithOle = async (ole, issuer, owner) => {
   return await SpaceShare.new(ole, issuer, 3000, K, B, { from: owner });
 };
 
-const getSign = async (signer, trader) => {
+const getSign = async (signer, trader,spaceId) => {
   let timestamp = (await web3.eth.getBlock("latest")).timestamp;
   let sign;
-  await signer.signMessage(hexStringToArray(ethers.solidityPackedKeccak256(["address", "uint256"], [trader, timestamp]))).then(result => {
+  await signer.signMessage(hexStringToArray(ethers.solidityPackedKeccak256(["address", "uint256", "uint256"], [trader, timestamp,spaceId]))).then(result => {
     sign = result;
   });
   return [sign, timestamp];

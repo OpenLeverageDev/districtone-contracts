@@ -40,10 +40,10 @@ contract("SpaceShare.sol", function(accounts) {
     await oleCtr.approve(shareCtr.address, maxInAmount, { from: acc1 });
     await oleCtr.mint(acc2, maxInAmount);
     await oleCtr.approve(shareCtr.address, maxInAmount, { from: acc2 });
-    let signInfo1 = await getSign(issuer, acc1);
+    let signInfo1 = await getSign(issuer, acc1, spaceId.toNumber());
     sign1 = signInfo1[0];
     signTimeStamp1 = signInfo1[1];
-    let signInfo2 = await getSign(issuer, acc2);
+    let signInfo2 = await getSign(issuer, acc2, spaceId.toNumber());
     sign2 = signInfo2[0];
     signTimeStamp2 = signInfo2[1];
   });
@@ -128,8 +128,11 @@ contract("SpaceShare.sol", function(accounts) {
     });
 
     it("fails if share not exists", async () => {
+      let signInfo = await getSign(issuer, acc1, notExistSpaceId.toNumber());
+      let sign = signInfo[0];
+      let ts = signInfo[1];
       await expectRevert(
-        shareCtr.buyShares(notExistSpaceId, new BN(1), price1, signTimeStamp1, sign1, { from: acc1 }),
+        shareCtr.buyShares(notExistSpaceId, new BN(1), price1, ts, sign, { from: acc1 }),
         spaceNotExistsError
       );
     });

@@ -82,13 +82,13 @@ contract SpaceShare is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShare {
      * @param signature The signature proving the permission to buy.
      */
     function buyShares(uint256 spaceId, uint256 shares, uint256 maxInAmount, uint256 timestamp, bytes memory signature) external override {
-        SignatureLib.SignedData memory signedData = SignatureLib.SignedData(_msgSender(), timestamp);
+        SignatureLib.SignedData memory signedData = SignatureLib.SignedData(_msgSender(), timestamp, spaceId);
         if (!signedData.verify(signature, signIssuerAddress, signValidDuration)) revert InvalidSignature();
         _buyShares(spaceId, shares, maxInAmount, _msgSender());
     }
 
     function buySharesTo(uint256 spaceId, uint256 shares, uint256 maxInAmount, uint256 timestamp, bytes memory signature, address to) external override {
-        SignatureLib.SignedData memory signedData = SignatureLib.SignedData(to, timestamp);
+        SignatureLib.SignedData memory signedData = SignatureLib.SignedData(to, timestamp, spaceId);
         if (!signedData.verify(signature, signIssuerAddress, signValidDuration)) revert InvalidSignature();
         _buyShares(spaceId, shares, maxInAmount, to);
     }

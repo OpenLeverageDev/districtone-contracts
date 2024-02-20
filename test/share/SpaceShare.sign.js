@@ -10,7 +10,7 @@ const { hexStringToArray } = require("../util/EtheUtil");
 contract("SpaceShare.sol", function(accounts) {
   let shareCtr;
   let oleCtr;
-  let spaceId = new BN(1);
+  let spaceId = 1;
   let owner = accounts[0];
   let trader = accounts[1];
   let maxInAmount = web3.utils.toWei("10000");
@@ -30,17 +30,17 @@ contract("SpaceShare.sol", function(accounts) {
   });
 
   it("should successfully verify a valid signature", async () => {
-    let validSignature = await sign(trader, timestamp, issuer);
+    let validSignature = await sign(trader, timestamp, spaceId, issuer);
     await shareCtr.buyShares(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader });
   });
 
   it("should fail when signature content is inconsistent", async () => {
-    let validSignature = await sign(accounts[2], timestamp, issuer);
+    let validSignature = await sign(accounts[2], timestamp, spaceId, issuer);
     await expectRevert(
       shareCtr.buyShares(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader }),
       invalidSignatureError
     );
-    validSignature = await sign(trader, timestamp - 1, issuer);
+    validSignature = await sign(trader, timestamp - 1, spaceId, issuer);
     await expectRevert(
       shareCtr.buyShares(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader }),
       invalidSignatureError
@@ -49,7 +49,7 @@ contract("SpaceShare.sol", function(accounts) {
 
   it("should fail when signature is expired", async () => {
     let newTimestamp = timestamp - 6000; // 100 minutes ago
-    let expiredSignature = await sign(trader, newTimestamp, issuer);
+    let expiredSignature = await sign(trader, newTimestamp, spaceId, issuer);
     await expectRevert(
       shareCtr.buyShares(spaceId, new BN(1), price1, newTimestamp, expiredSignature, { from: trader }),
       expiredSignatureError
@@ -57,16 +57,16 @@ contract("SpaceShare.sol", function(accounts) {
   });
 
   it("should fail when owner address is inconsistent", async () => {
-    let validSignature = await sign(trader, timestamp, invalidIssuer);
+    let validSignature = await sign(trader, timestamp, spaceId, invalidIssuer);
     await expectRevert(
       shareCtr.buyShares(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader }),
       invalidSignatureError
     );
   });
 
-  async function sign(user, timestamp, issuer) {
+  async function sign(user, timestamp, spaceId, issuer) {
     let sign;
-    await issuer.signMessage(hexStringToArray(ethers.solidityPackedKeccak256(["address", "uint256"], [user, timestamp]))).then(result => {
+    await issuer.signMessage(hexStringToArray(ethers.solidityPackedKeccak256(["address", "uint256", "uint256"], [user, timestamp, spaceId]))).then(result => {
       sign = result;
     });
     return sign;

@@ -120,9 +120,9 @@ describe("LinkUp Contract", function() {
       const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, 0, { value: ethers.parseEther("0.0015") });
 
       // Define the expected fee distribution based on your contract logic
-      const expectedDirectInviterFee = ethers.parseEther("88.888888888888888888"); // Replace with actual expected value
-      const expectedSecondTierInviterFee = ethers.parseEther("11.111111111111111112"); // Replace with actual expected value
-      const expectedProtocolFee = ethers.parseEther("0.00015"); // Replace with actual expected value
+      const expectedDirectInviterFee = ethers.parseEther("88.235294117647058823"); // Replace with actual expected value
+      const expectedSecondTierInviterFee = ethers.parseEther("11.764705882352941177"); // Replace with actual expected value
+      const expectedProtocolFee = ethers.parseEther("0.000225"); // Replace with actual expected value
 
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)
@@ -150,9 +150,9 @@ describe("LinkUp Contract", function() {
 
 
       // Define the expected fee distribution based on your contract logic for this scenario
-      const expectedDirectInviterFee = ethers.parseEther("55.555555555555555555"); // Adjust the value based on your contract
-      const expectedSecondTierInviterFee = ethers.parseEther("44.444444444444444445"); // Adjust the value based on your contract
-      const expectedProtocolFee = ethers.parseEther("0.00015"); // Adjust the value based on your contract
+      const expectedDirectInviterFee = ethers.parseEther("58.823529411764705882"); // Adjust the value based on your contract
+      const expectedSecondTierInviterFee = ethers.parseEther("41.176470588235294118"); // Adjust the value based on your contract
+      const expectedProtocolFee = ethers.parseEther("0.000225"); // Adjust the value based on your contract
 
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)
@@ -178,9 +178,9 @@ describe("LinkUp Contract", function() {
 
 
       // Define the expected fee distribution based on your contract logic for this scenario
-      const expectedDirectInviterFee = ethers.parseEther("70"); // Adjust the value based on your contract
-      const expectedSecondTierInviterFee = ethers.parseEther("30"); // Adjust the value based on your contract
-      const expectedProtocolFee = ethers.parseEther("0"); // Adjust the value based on your contract
+      const expectedDirectInviterFee = ethers.parseEther("77.777777777777777777"); // Adjust the value based on your contract
+      const expectedSecondTierInviterFee = ethers.parseEther("22.222222222222222223"); // Adjust the value based on your contract
+      const expectedProtocolFee = ethers.parseEther("0.00015"); // Adjust the value based on your contract
 
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)
@@ -206,9 +206,9 @@ describe("LinkUp Contract", function() {
       const joinTx = await linkUp.connect(addrs[3]).join(inviter, signatureForInviter, 0, { value: ethers.parseEther("0.0015") });
 
       // Define the expected fee distribution based on your contract logic for this scenario
-      const expectedDirectInviterFee = ethers.parseEther("75"); // Adjust the value based on your contract
-      const expectedSecondTierInviterFee = ethers.parseEther("25"); // Adjust the value based on your contract
-      const expectedProtocolFee = ethers.parseEther("0.0003"); // Adjust the value based on your contract
+      const expectedDirectInviterFee = ethers.parseEther("80"); // Adjust the value based on your contract
+      const expectedSecondTierInviterFee = ethers.parseEther("20"); // Adjust the value based on your contract
+      const expectedProtocolFee = ethers.parseEther("0.000375"); // Adjust the value based on your contract
 
       // Validate the Joined event with the expected fee distribution
       await expect(joinTx)

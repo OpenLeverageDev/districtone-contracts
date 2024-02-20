@@ -34,7 +34,7 @@ contract("SpaceShare.sol", function(accounts) {
     await shareCtr.setFees(protocolFee, holderFee, { from: owner });
     await shareCtr.setProtocolFeeDestination(treasury, { from: owner });
     await oleCtr.approve(shareCtr.address, maxInAmount, { from: owner });
-    let signInfo = await getSign(issuer, trader);
+    let signInfo = await getSign(issuer, trader, spaceId.toNumber());
     sign = signInfo[0];
     signTimeStamp = signInfo[1];
     await oleCtr.mint(trader, maxInAmount);
@@ -95,7 +95,7 @@ contract("SpaceShare.sol", function(accounts) {
       await oleCtr.mint(trader2, maxInAmount);
       await oleCtr.approve(shareCtr.address, maxInAmount, { from: trader2 });
       await shareCtr.setFees(protocolFee, 0, { from: owner });
-      let signInfo = await getSign(issuer, trader2);
+      let signInfo = await getSign(issuer, trader2, spaceId.toNumber());
       sign = signInfo[0];
       signTimeStamp = signInfo[1];
       await shareCtr.buyShares(spaceId, new BN(1), await shareCtr.getBuyPriceWithFees(spaceId, 1), signTimeStamp, sign, { from: trader2 });
@@ -123,7 +123,10 @@ contract("SpaceShare.sol", function(accounts) {
     it("withdraw rewards for 2 spaceIds", async () => {
       await shareCtr.createSpace({ from: owner });
       let space2Id = 2;
-      await shareCtr.buyShares(space2Id, new BN(2), await shareCtr.getBuyPriceWithFees(spaceId, 2), signTimeStamp, sign, { from: trader });
+      let signInfo = await getSign(issuer, trader, space2Id);
+      let sign = signInfo[0];
+      let ts = signInfo[1];
+      await shareCtr.buyShares(space2Id, new BN(2), await shareCtr.getBuyPriceWithFees(spaceId, 2), ts, sign, { from: trader });
       let reward = await shareCtr.getRewards([spaceId, space2Id], owner);
       let preOleBalance = new BN(await oleCtr.balanceOf(owner));
       await shareCtr.withdrawRewards([spaceId, space2Id], { from: owner });

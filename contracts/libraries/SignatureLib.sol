@@ -5,12 +5,13 @@ library SignatureLib {
     struct SignedData {
         address user;
         uint256 timestamp;
+        uint256 spaceId;
     }
 
     function verify(SignedData memory signedData, bytes memory signature, address issuerAddress, uint256 validDuration) internal view returns (bool) {
         require(block.timestamp <= signedData.timestamp + validDuration, "Signature is expired");
 
-        bytes32 dataHash = keccak256(abi.encodePacked(signedData.user, signedData.timestamp));
+        bytes32 dataHash = keccak256(abi.encodePacked(signedData.user, signedData.timestamp, signedData.spaceId));
         bytes32 message = prefixed(dataHash);
 
         address signer = recoverSigner(message, signature);
