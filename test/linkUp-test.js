@@ -269,6 +269,13 @@ describe("LinkUp Contract", function() {
       await linkUp.setMinSoleBalance(1);
       expect(await linkUp.minSoleBalance()).to.equal(1);
     });
+
+    it("Should fail if sender is not owner", async function() {
+      await expect(linkUp.connect(addr1).setZap(addr2))
+        .to.be.revertedWithCustomError(linkUp, "OwnableUnauthorizedAccount");
+      await linkUp.setZap(addr2);
+      expect(await linkUp.zap()).to.equal(addr2);
+    });
   });
 
 });

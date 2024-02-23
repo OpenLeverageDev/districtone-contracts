@@ -16,7 +16,7 @@ contract LinkUp is BlastAdapter {
 
     ISOLE public immutable SOLE; // sOLE Token, immutable
     IERC20 public immutable OLE; // Address of the OLE token
-    OPZap public immutable ZAP;
+    OPZap public zap;
     uint256 public minSoleBalance = 100 * 10 ** 18; // Example: 100 sOLE (adjust as needed)
     address public signerAddress;
     uint256 public joinFee = 0.0015 ether;
@@ -44,7 +44,7 @@ contract LinkUp is BlastAdapter {
         signerAddress = signer;
         SOLE = ISOLE(_sole);
         OLE = _ole;
-        ZAP = _zap;
+        zap = _zap;
     }
 
     function join(address inviter, bytes memory signature, uint256 minBoughtOle) external payable {
@@ -94,7 +94,7 @@ contract LinkUp is BlastAdapter {
         uint256 _protocolFee = (joinFee * protocolFeePercent) / 100;
         protocolFee += _protocolFee;
         // Buy ole
-        uint256 boughtOle = ZAP.swapETHForOLE{value: joinFee - _protocolFee}(minBoughtOle);
+        uint256 boughtOle = zap.swapETHForOLE{value: joinFee - _protocolFee}(minBoughtOle);
         // Distribute fees
         uint256 directInviterFee = (boughtOle * directInviterFeePercent) / (directInviterFeePercent + secondTierInviterFeePercent);
         uint256 secondTierInviterFee = boughtOle - directInviterFee;
@@ -166,5 +166,9 @@ contract LinkUp is BlastAdapter {
     function setMinSoleBalance(uint256 newMinSoleBalance) external onlyOwner {
         minSoleBalance = newMinSoleBalance;
         emit MinSoleBalanceChanged(newMinSoleBalance);
+    }
+
+    function setZap(OPZap newOpZap) external onlyOwner {
+        zap = newOpZap;
     }
 }
