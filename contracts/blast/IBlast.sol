@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 interface IBlast {
     enum YieldMode {
         AUTOMATIC,
-        VOID,
+        DISABLED,
         CLAIMABLE
     }
 
