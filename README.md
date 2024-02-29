@@ -26,13 +26,14 @@ RewardDistributor.sol This contract is designed to distribute rewards in a linea
 
 ## Contract Deployments
 
-| Contract                                                                                                                                         | Blast Sepolia                                |
-|--------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
-| [BlastOLE](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/BlastOLE.sol)                   | `0x53B7765a53630e1AB480a201Fba04298ab3c404d` |
-| [LinkUp](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/LinkUp.sol)                       | `0x99a10180ce9c795F6bA0D6f88E26749916092f34` |
-| [SpaceShare](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/share/SpaceShare.sol)         | `0x6D27862759e4cF0F418169557BDDA4c4A35FD779` |
-| [OPZap](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/OPZap.sol)                         | `0xF7eC0962110CFa2513C702e1a7AEd23C6eE3d8FC` | 
-| [RewardDistributor](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/RewardDistributor.sol) | `0x4aA6818E6A6D9a0A30705b4Db62030016A1753E2` |                                          |                                           |
+| Contract                                                                                                                                         | Blast Sepolia                                | Blast Mainnet                                |
+|--------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|----------------------------------------------|
+| [BlastOLE](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/BlastOLE.sol)                   | `0x53B7765a53630e1AB480a201Fba04298ab3c404d` | `0x73c369F61c90f03eb0Dd172e95c90208A28dC5bc` |
+| [LinkUp](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/LinkUp.sol)                       | `0x99a10180ce9c795F6bA0D6f88E26749916092f34` | `0x768A55F26CD73e4569136c8249370D8bC96c3E3a` |
+| [SpaceShare](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/share/SpaceShare.sol)         | `0x6D27862759e4cF0F418169557BDDA4c4A35FD779` | `0x1c59529ba394427D9a18A3eF6B8CA38906b8E2dB` |
+| [OPZap](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/OPZap.sol)                         | `0xF7eC0962110CFa2513C702e1a7AEd23C6eE3d8FC` | `0xb936dCd9035eCa0E958F67Bd553443Dfbc6153d4` | 
+| [RewardDistributor](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/RewardDistributor.sol) | `0x4aA6818E6A6D9a0A30705b4Db62030016A1753E2` | `0x20EBf8D5C6CB3Ba26F5f5aeF993a78411457D183` |                                           
+| [SOLE](https://github.com/OpenLeverageDev/openleverage-contracts/blob/main/contracts/SOLE.sol)              | `0xd837dDaBCAcaf60F73FE9e0F2Eb97cf638fe2105` | `0xde600C085CE67F756Bdab2aD2E6EF3E797688834` |                                           
 
 
 ## Build & Tests

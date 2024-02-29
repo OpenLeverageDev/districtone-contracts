@@ -33,7 +33,7 @@ describe("Zap Contract", function() {
     it("constructor initializes  ", async function() {
       expect(await zapCtr.OLE()).to.equal(await oleCtr.getAddress());
       expect(await zapCtr.WETH()).to.equal(await wethCtr.getAddress());
-      expect(await zapCtr.OLE_ETH()).to.equal(await oleEthCtr.getAddress());
+      expect(await zapCtr.oleEthLp()).to.equal(await oleEthCtr.getAddress());
       expect(await zapCtr.DEX_FEES()).to.equal(DEX_FEES);
       expect(await zapCtr.SOLE()).to.equal(await soleCtr.getAddress());
       expect(await zapCtr.SPACE()).to.equal(await spaceShareCtr.getAddress());
