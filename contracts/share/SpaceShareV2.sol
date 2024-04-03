@@ -46,7 +46,8 @@ contract SpaceShareV2 is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShareV2 {
     mapping(uint256 spaceId => uint256 reward) public rewardPerShareStored; // Mapping of spaceId to per share reward stored (scaled by 10**18).
     mapping(uint256 spaceId => mapping(address holder => HolderReward)) public holderSharesReward; // Mapping of spaceId and holder address to holder rewards.
 
-    uint256 public spaceIdx = 3000; // Index to track the current space.
+    uint256 constant INITIAL_SPACE_ID = 3000;
+    uint256 public spaceIdx = INITIAL_SPACE_ID; // Index to track the current space.
 
     /**
      * @notice Constructor to create SpaceShareV2.sol contract instance.
@@ -127,13 +128,18 @@ contract SpaceShareV2 is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShareV2 {
         OLE.transferOut(_msgSender(), reward);
     }
 
+    function exitSpace(uint256 spaceId, uint256 minOutAmount) external override {
+        revert Disabled();
+    }
     /**
      * @notice Exits a space by selling all shares and withdrawing rewards.
      * @dev A convenience function for users to liquidate shares and collect rewards in a single transaction.
      * @param spaceId The ID of the space to exit.
      * @param minOutAmount The minimum amount of tokens the seller is willing to receive for their shares.
      */
-    function exitSpace(uint256 spaceId, uint256 minOutAmount) external override {
+    function exitSpaceV2(uint256 spaceId, uint256 minOutAmount, uint256 timestamp, bytes memory signature) external override {
+        SignatureLibV2.SignedData memory signedData = SignatureLibV2.SignedData(_msgSender(), timestamp, spaceId, sharesBalance[spaceId][_msgSender()], false);
+        if (!signedData.verify(signature, signIssuerAddress, signValidDuration)) revert InvalidSignature();
         uint256 outAmount = _sellShares(spaceId, sharesBalance[spaceId][_msgSender()], minOutAmount);
         uint reward = _withdrawReward(spaceId);
         OLE.transferOut(_msgSender(), outAmount + reward);
@@ -190,7 +196,7 @@ contract SpaceShareV2 is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShareV2 {
 
     function _buyShares(uint256 spaceId, uint256 shares, uint256 maxInAmount, address to) internal {
         if (shares == 0) revert ZeroAmount();
-        if (spaceId > spaceIdx) revert SpaceNotExists();
+        if (spaceId > spaceIdx || spaceId <= INITIAL_SPACE_ID) revert SpaceNotExists();
         uint256 supply = sharesSupply[spaceId];
         uint256 price = _getPrice(supply, shares, K, B);
         (uint256 protocolFee, uint256 holderFee) = _getFees(price);
@@ -207,7 +213,7 @@ contract SpaceShareV2 is BlastAdapter, IErrors, ReentrancyGuard, ISpaceShareV2 {
 
     function _sellShares(uint256 spaceId, uint256 shares, uint256 minOutAmount) internal returns (uint256 outAmount) {
         if (shares == 0) revert ZeroAmount();
-        if (spaceId > spaceIdx) revert SpaceNotExists();
+        if (spaceId > spaceIdx || spaceId <= INITIAL_SPACE_ID) revert SpaceNotExists();
         uint256 supply = sharesSupply[spaceId];
         address trader = _msgSender();
         if (shares >= supply) revert CannotSellLastShare();

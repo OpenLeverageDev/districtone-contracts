@@ -274,7 +274,8 @@ contract("SpaceShareV2.sol", function(accounts) {
       let oleByReward = new BN(await shareCtr.getRewards([spaceId], owner));
       let oleByExit = oleBySell.add(oleByReward);
       let preOleBalance = new BN(await oleCtr.balanceOf(owner));
-      await shareCtr.exitSpace(spaceId, 0);
+      let signInfo = await signSell(issuer, owner, spaceId.toNumber(), new BN(1).toNumber());
+      await shareCtr.exitSpaceV2(spaceId, 0,signInfo[1],signInfo[0]);
       expect(await oleCtr.balanceOf(owner)).to.bignumber.eq(preOleBalance.add(oleByExit));
     });
 

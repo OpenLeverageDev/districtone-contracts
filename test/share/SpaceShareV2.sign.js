@@ -10,7 +10,7 @@ const { hexStringToArray } = require("../util/EtheUtil");
 contract("SpaceShareV2.sol", function(accounts) {
   let shareCtr;
   let oleCtr;
-  let spaceId = 1;
+  let spaceId = 3001;
   let owner = accounts[0];
   let trader = accounts[1];
   let maxInAmount = web3.utils.toWei("10000");
@@ -70,6 +70,7 @@ contract("SpaceShareV2.sol", function(accounts) {
       "Disabled"
     );
 
+
     it("sell should fail when signature content is inconsistent", async () => {
       let validSignature = await signSell(accounts[2], timestamp, spaceId, 1, issuer);
       await expectRevert(
@@ -97,6 +98,13 @@ contract("SpaceShareV2.sol", function(accounts) {
       await expectRevert(
         shareCtr.sellShareV2(spaceId, new BN(1), price1, timestamp, validSignature, { from: trader }),
         invalidSignatureError
+      );
+    });
+
+    it("should fail when exit space with v1", async () => {
+      await expectRevert(
+        shareCtr.exitSpace(spaceId, new BN(1), { from: trader }),
+        "Disabled"
       );
     });
   });
