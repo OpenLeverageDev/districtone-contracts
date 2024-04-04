@@ -33,7 +33,9 @@ RewardDistributor.sol This contract is designed to distribute rewards in a linea
 | [SpaceShare](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/share/SpaceShare.sol)         | `0x6D27862759e4cF0F418169557BDDA4c4A35FD779` | `0x1c59529ba394427D9a18A3eF6B8CA38906b8E2dB` |
 | [OPZap](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/OPZap.sol)                         | `0xF7eC0962110CFa2513C702e1a7AEd23C6eE3d8FC` | `0xb936dCd9035eCa0E958F67Bd553443Dfbc6153d4` | 
 | [RewardDistributor](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/RewardDistributor.sol) | `0x4aA6818E6A6D9a0A30705b4Db62030016A1753E2` | `0x20EBf8D5C6CB3Ba26F5f5aeF993a78411457D183` |                                           
-| [SOLE](https://github.com/OpenLeverageDev/openleverage-contracts/blob/main/contracts/SOLE.sol)              | `0xd837dDaBCAcaf60F73FE9e0F2Eb97cf638fe2105` | `0xde600C085CE67F756Bdab2aD2E6EF3E797688834` |                                           
+| [SOLE](https://github.com/OpenLeverageDev/openleverage-contracts/blob/main/contracts/SOLE.sol)                                                   | `0xd837dDaBCAcaf60F73FE9e0F2Eb97cf638fe2105` | `0xde600C085CE67F756Bdab2aD2E6EF3E797688834` |          
+| [SpaceShareV2](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-v2-audited/contracts/share/SpaceShareV2.sol)             | `-`                                          | `0x77840848bce90e35172efe4644eb3f48a93565e9` |
+| [OPZapV2](https://github.com/OpenLeverageDev/districtone-contracts/blob/threesigma-peckshield-audited/contracts/OPZap.sol)                       | `-`                                          | `0x05B9f09a38f36C126D47420e210dB7FE8b5EC7ae` | 
 
 
 ## Build & Tests
